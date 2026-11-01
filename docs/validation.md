@@ -39,3 +39,9 @@ Local macOS ARM64 / JDK 25.0.3, cwebp/dwebp 1.6.0:
 - A first comparison exposed differing grayscale PNG sample-to-RGB interpretation between Java ImageIO and cwebp. Source-pixel equality therefore uses an explicit 8-bit sRGB PNG normalization. Native grayscale PNG interoperability is checked against the independent dwebp decode of the same WebP, avoiding an incorrect cross-color-space equality assertion.
 
 These are deterministic synthetic fixtures plus the original independent cwebp fixture. This is not a large real-world photographic corpus, nor ICC/EXIF preservation validation. The library intentionally does not preserve those metadata.
+
+## #5 Packaged JAR loading (2026-11-01)
+
+Four Maven Failsafe integration tests passed locally (macOS ARM64 / JDK 25.0.3): a fresh JVM with only the packaged JAR on its classpath, explicit native library loading from a path containing spaces, a JAR stripped of native resources producing the documented recovery message, and an invalid explicit path failing with `UnsatisfiedLinkError`. Successful child JVMs perform an exact lossless round trip and assert the codec classes came from a JAR. Bundled loading uses a temporary directory containing spaces. The suite runs at `mvn verify`, after packaging, on the OS/JDK CI matrix.
+
+The platform matrix covers the architectures reported by each hosted runner; it does not establish all OS/architecture combinations, Linux musl compatibility, or support for older glibc versions. Multi-platform fat-JAR distribution is still outside this validation scope.
