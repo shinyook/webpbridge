@@ -1,0 +1,18 @@
+{
+  "measurement_date": "2026-11-01",
+  "cpu": "Apple M1",
+  "logical_cpus": 8,
+  "physical_memory_bytes": 17179869184,
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.4.1\nBuildVersion:\t\t25E253",
+  "architecture": "arm64",
+  "java": "openjdk version \"25.0.3\" 2026-04-21 LTS\nOpenJDK Runtime Environment Zulu25.34+17-CA (build 25.0.3+9-LTS)\nOpenJDK 64-Bit Server VM Zulu25.34+17-CA (build 25.0.3+9-LTS, mixed mode, sharing)",
+  "jmh": "1.37",
+  "libwebp": "1.6.0",
+  "webp_imageio": "com.github.usefulness:webp-imageio:0.11.0",
+  "webp_imageio_native_encoder_version": "1.6.0 (queried from bundled macOS aarch64 dylib)",
+  "twelvemonkeys": "com.twelvemonkeys.imageio:imageio-webp:3.15.3",
+  "base_commit": "69131d6d4f9ed22640a1c0d355016271415020dd",
+  "benchmark_source_sha256": "7d580be0f95a244084f22ee115941b4a500fd9571e767b989587c3678c543371",
+  "command": "java -jar benchmarks/target/benchmarks.jar CodecBenchmark -prof gc -rf json -rff benchmarks/results/macos-arm64-jdk25.json",
+  "conditions": "Shared desktop, no CPU affinity or power governor control; no other validation jobs ran locally during measurement. Native initialization excluded. This is a single-machine observation."
+}

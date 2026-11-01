@@ -12,6 +12,62 @@ BufferedImage restored = WebP.decode(compressed);
 BufferedImage limited = WebP.decode(compressed, 4_000_000);
 ```
 
+## Benchmarks
+
+Measured on **Apple M1 (ARM64), macOS 26.4.1, Azul OpenJDK 25.0.3**, on 2026-11-01, using JMH 1.37. Compared against [webp-imageio 0.11.0](https://github.com/usefulness/webp-imageio) and [TwelveMonkeys 3.15.3](https://github.com/haraldk/TwelveMonkeys). TwelveMonkeys supports WebP decoding only. Both native implementations used libwebp 1.6.0; the competitor's version was queried from its bundled native binary.
+
+Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout.
+
+<!-- BEGIN BENCHMARK TABLES -->
+Average **ms/op ± JMH 99.9% confidence-interval half-width**; lower is better. Each cell contains 10 measured iterations across two forks.
+
+### Encoding
+
+| Dataset | Mode | webp-jni | webp-imageio 0.11.0 |
+| --- | --- | ---: | ---: |
+| ui256 | lossless | 18.601 ± 5.336 | 15.980 ± 2.920 |
+| ui256 | lossy80 | 2.107 ± 0.043 | 2.354 ± 0.676 |
+| texture1024 | lossless | 123.619 ± 35.200 | 106.806 ± 12.183 |
+| texture1024 | lossy80 | 180.656 ± 58.595 | 188.442 ± 38.856 |
+
+### Decoding
+
+| Dataset | Mode | webp-jni | webp-imageio 0.11.0 | TwelveMonkeys 3.15.3 |
+| --- | --- | ---: | ---: | ---: |
+| ui256 | lossless | 0.726 ± 0.062 | 0.309 ± 0.048 | 2.399 ± 0.290 |
+| ui256 | lossy80 | 0.633 ± 0.067 | 0.184 ± 0.005 | 2.797 ± 0.604 |
+| texture1024 | lossless | 27.989 ± 5.221 | 20.936 ± 1.488 | 126.026 ± 44.346 |
+| texture1024 | lossy80 | 54.073 ± 9.175 | 44.426 ± 5.373 | 155.220 ± 67.877 |
+
+### Java heap allocation
+
+Measured **KiB/op** (`gc.alloc.rate.norm` / 1024). These are Java allocations, **not native memory or peak RSS**. See raw JSON for allocation confidence intervals.
+
+| Dataset | Mode | Encode JNI | Encode ImageIO | Decode JNI | Decode ImageIO | Decode TwelveMonkeys |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| ui256 | lossless | 512.3 | 530.9 | 768.6 | 278.0 | 243.0 |
+| ui256 | lossy80 | 513.6 | 534.9 | 768.6 | 280.7 | 6621.2 |
+| texture1024 | lossless | 11264.9 | 25626.9 | 12288.8 | 18462.8 | 6196.5 |
+| texture1024 | lossy80 | 8895.3 | 12357.6 | 12289.0 | 7563.2 | 100312.9 |
+
+### Encoded output sizes
+
+Both native encoders produced byte-identical output for every fixture in this run; [SHA-256 checksums](benchmarks/results/output-sizes.csv) are retained.
+
+| Dataset | Mode | webp-jni bytes | webp-imageio bytes |
+| --- | --- | ---: | ---: |
+| ui256 | lossless | 134 | 134 |
+| ui256 | lossy80 | 1,536 | 1,536 |
+| texture1024 | lossless | 3,145,808 | 3,145,808 |
+| texture1024 | lossy80 | 719,014 | 719,014 |
+<!-- END BENCHMARK TABLES -->
+
+In this run, native ImageIO had lower mean decode times than this binding in all four cases; the UI cases have non-overlapping error intervals. This binding decoded faster than TwelveMonkeys for these fixtures. All four encoding comparisons have overlapping error intervals, so they do not establish an encoding winner.
+
+These results describe these workloads on one shared desktop, not a universal ranking or a production SLA. Small differences with overlapping error intervals are inconclusive. No claim is made about real photographs, alpha-heavy images, concurrent throughput, cold starts, or other platforms. Native memory and leak checks are covered separately under extended validation.
+
+[Methodology and reproduction commands](benchmarks/README.md) · [JMH raw results](benchmarks/results/macos-arm64-jdk25.json) · [Environment](benchmarks/results/environment.json). Benchmark dependencies are isolated in the standalone `benchmarks` module. CI validates correctness and runs only a smoke benchmark; its timings are not used in the tables. Regenerate tables with `python3 benchmarks/report.py` after reproducing the recorded run configuration.
+
 ## Build
 
 Requires JDK 17+, Maven, CMake 3.20+, Git and a C compiler. Set `JAVA_HOME` to your JDK. CMake downloads pinned libwebp v1.6.0 and statically links it into the JNI library; no system libwebp installation is required.
