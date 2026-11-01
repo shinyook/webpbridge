@@ -10,6 +10,7 @@ public final class WebP {
         static { NativeLoader.load(); }
         static native byte[] encode(byte[] rgba, int width, int height, float quality, boolean lossless);
         static native byte[] decode(byte[] data, int maxPixels);
+        static native byte[] inspect(byte[] data);
     }
 
     /** Encodes with lossy RGB compression and lossless alpha, quality in [0, 100]. */
@@ -45,6 +46,27 @@ public final class WebP {
         checkInput(data,options);
         return decode(data,options.maxPixels());
     }
+    /** Inspects a complete RIFF/WebP buffer without decoding pixel data.
+     * @param data encoded input, bounded by default byte limit
+     * @return header metadata; not proof that the full bitstream decodes
+     */
+    public static WebPInfo inspect(byte[] data) { return inspect(data,WebPOptions.DEFAULT); }
+
+    /** Inspects header metadata; maxInputBytes applies, maxPixels does not.
+     * @param data complete RIFF/WebP input
+     * @param options input byte limit; other settings are ignored
+     * @return header metadata, including unsupported animation when identified
+     */
+    public static WebPInfo inspect(byte[] data, WebPOptions options) {
+        checkInput(data,options);
+        byte[] header=Native.inspect(data);
+        WebPInfo.Format format=switch(header[10]) {
+            case 1 -> WebPInfo.Format.LOSSY; case 2 -> WebPInfo.Format.LOSSLESS;
+            default -> WebPInfo.Format.UNSPECIFIED;
+        };
+        return new WebPInfo(readInt(header,0),readInt(header,4),header[8]!=0,header[9]!=0,format);
+    }
+
     private static void checkInput(byte[] data, WebPOptions options) {
         Objects.requireNonNull(data,"data"); Objects.requireNonNull(options,"options");
         if(data.length>options.maxInputBytes()) throw new IllegalArgumentException("Encoded input exceeds byte limit");

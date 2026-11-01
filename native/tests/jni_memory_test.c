@@ -53,6 +53,7 @@ static const struct JNINativeInterface_ functions = {
     .ReleaseByteArrayElements=unpin, .NewByteArray=new_array, .SetByteArrayRegion=set_region
 };
 #define ENCODE(a,w,h,q,l) Java_io_github_shinyook_webpbridge_WebP_00024Native_encode(&env,NULL,a,w,h,q,l)
+#define INSPECT(a) Java_io_github_shinyook_webpbridge_WebP_00024Native_inspect(&env,NULL,a)
 #define DECODE(a,limit) Java_io_github_shinyook_webpbridge_WebP_00024Native_decode(&env,NULL,a,limit)
 #define REJECT(expr) do { pending_exception=0; jbyteArray rejected=(expr); assert(!rejected && pending_exception && pins==0); pending_exception=0; } while(0)
 int main(void) {
@@ -63,6 +64,10 @@ int main(void) {
         for(int lossless=0;lossless<2;lossless++) {
             jbyteArray encoded=ENCODE((jbyteArray)source,64,64,80,(jboolean)lossless);
             assert(encoded && !pending_exception && pins==0);
+            jbyteArray info=INSPECT(encoded);
+            assert(info && ((Array *)info)->length==12 && pins==0 && !pending_exception);
+            assert(((Array *)info)->bytes[10]==(lossless ? 2 : 1));
+            dispose(info);
             jbyteArray decoded=DECODE(encoded,4096);
             assert(decoded && !pending_exception && pins==0);
             assert(((Array *)decoded)->length==source->length+8);
@@ -74,10 +79,12 @@ int main(void) {
             REJECT(DECODE((jbyteArray)truncated,4096));
             dispose((jbyteArray)truncated);
             fail_new_array=1;
+            REJECT(INSPECT(encoded));
             REJECT(DECODE(encoded,4096));
             REJECT(ENCODE((jbyteArray)source,64,64,80,(jboolean)lossless));
             fail_new_array=0;
             fail_pin=1;
+            REJECT(INSPECT(encoded));
             REJECT(DECODE(encoded,4096));
             REJECT(ENCODE((jbyteArray)source,64,64,80,(jboolean)lossless));
             fail_pin=0;

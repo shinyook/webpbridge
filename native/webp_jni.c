@@ -81,3 +81,29 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
     WebPFree(rgba);
     return result;
 }
+
+JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_inspect
+(JNIEnv *env, jclass cls, jbyteArray input) {
+    (void)cls;
+    if (!input) { INVALID("Input must not be null"); return NULL; }
+    jsize length=(*env)->GetArrayLength(env,input);
+    if (length<12) { INVALID("Incomplete RIFF/WebP header"); return NULL; }
+    jbyte *bytes=(*env)->GetByteArrayElements(env,input,NULL);
+    if (!bytes) return NULL;
+    const uint8_t *data=(const uint8_t *)bytes;
+    uint32_t declared=(uint32_t)data[4] | ((uint32_t)data[5]<<8) | ((uint32_t)data[6]<<16) | ((uint32_t)data[7]<<24);
+    WebPBitstreamFeatures features;
+    int container_ok=memcmp(data,"RIFF",4)==0 && memcmp(data+8,"WEBP",4)==0 && (uint64_t)declared+8==(uint64_t)length;
+    VP8StatusCode status=container_ok ? WebPGetFeatures(data,(size_t)length,&features) : VP8_STATUS_BITSTREAM_ERROR;
+    (*env)->ReleaseByteArrayElements(env,input,bytes,JNI_ABORT);
+    if (status!=VP8_STATUS_OK) { INVALID("Invalid or incomplete RIFF/WebP header"); return NULL; }
+    uint8_t header[12]={0};
+    for (int i=0;i<4;i++) {
+        header[i]=(uint8_t)((uint32_t)features.width>>(24-8*i));
+        header[4+i]=(uint8_t)((uint32_t)features.height>>(24-8*i));
+    }
+    header[8]=(uint8_t)features.has_alpha; header[9]=(uint8_t)features.has_animation; header[10]=(uint8_t)features.format;
+    jbyteArray result=(*env)->NewByteArray(env,12);
+    if (result) (*env)->SetByteArrayRegion(env,result,0,12,(const jbyte *)header);
+    return result;
+}
