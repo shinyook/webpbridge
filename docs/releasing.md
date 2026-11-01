@@ -4,7 +4,7 @@
 
 Planned initial release: `io.github.shinyook:webpbridge:0.1.0`. The development POM stays at `0.1.0-SNAPSHOT`; the release workflow changes the version in its isolated checkout. Maven Central publication has not happened yet.
 
-The release JAR bundles exactly these three platform libraries:
+The release JAR bundles exactly these three platform libraries. Windows builds statically link the MSVC runtime; other operating-system library requirements still apply:
 
 | Resource directory | Build runner | Scope |
 | --- | --- | --- |
@@ -49,6 +49,6 @@ Signing and authenticated Portal validation cannot be confirmed by an unsigned c
 
 ## Local packaging
 
-For a local single-platform package, install the native resource as documented in the root README, then run `mvn -Prelease -Dgpg.skip=true verify`. This checks source/Javadoc generation without signing or publishing. It is not a substitute for the multi-platform candidate workflow. The `central` profile must only be used with the complete native bundle and release credentials.
+For a local single-platform package, install the native resource as documented in the root README, then run `mvn -Prelease -Dgpg.skip=true verify`. This checks source/Javadoc generation without signing or publishing. It is not a substitute for the multi-platform candidate workflow. The `central` profile rejects SNAPSHOT versions and missing native resources/license notices during Maven validation. It must only be used with the complete native bundle and release credentials.
 
 See [Central publication requirements](https://central.sonatype.org/publish/requirements/) for source/Javadoc, POM metadata and signing requirements.

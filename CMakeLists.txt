@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(webpjni LANGUAGES C)
 find_package(JNI REQUIRED)
+# Ship the Windows CRT in the native binary rather than requiring a separate
+# Visual C++ redistributable installation on consumer machines.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 option(WEBP_JNI_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
 option(WEBP_JNI_NATIVE_TESTS "Build standalone JNI allocation-path tests" OFF)
 if(WEBP_JNI_SANITIZERS)

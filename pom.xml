@@ -23,6 +23,17 @@
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-javadoc-plugin</artifactId><version>3.11.2</version><configuration><failOnError>true</failOnError></configuration><executions><execution><id>javadoc</id><goals><goal>jar</goal></goals></execution></executions></plugin>
       <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-gpg-plugin</artifactId><version>3.2.8</version><configuration><bestPractices>true</bestPractices><gpgArguments><arg>--pinentry-mode</arg><arg>loopback</arg></gpgArguments></configuration><executions><execution><id>sign</id><phase>verify</phase><goals><goal>sign</goal></goals></execution></executions></plugin>
     </plugins></build></profile>
-    <profile><id>central</id><build><plugins><plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.12.0</version><extensions>true</extensions><configuration><publishingServerId>central</publishingServerId><autoPublish>true</autoPublish><waitUntil>published</waitUntil></configuration></plugin></plugins></build></profile>
+    <profile><id>central</id><build><plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-enforcer-plugin</artifactId><version>3.6.2</version><executions><execution><id>complete-release-bundle</id><goals><goal>enforce</goal></goals><configuration><rules>
+        <requireReleaseVersion/>
+        <requireFilesExist><files>
+          <file>${project.build.outputDirectory}/native/linux-x86_64/libwebpjni.so</file>
+          <file>${project.build.outputDirectory}/native/windows-x86_64/webpjni.dll</file>
+          <file>${project.build.outputDirectory}/native/macos-aarch64/libwebpjni.dylib</file>
+          <file>${project.build.outputDirectory}/META-INF/licenses/libwebp/COPYING</file>
+          <file>${project.build.outputDirectory}/META-INF/licenses/libwebp/PATENTS</file>
+          <file>${project.build.outputDirectory}/META-INF/licenses/libwebp/AUTHORS</file>
+        </files></requireFilesExist>
+      </rules></configuration></execution></executions></plugin><plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.12.0</version><extensions>true</extensions><configuration><publishingServerId>central</publishingServerId><autoPublish>true</autoPublish><waitUntil>published</waitUntil></configuration></plugin></plugins></build></profile>
   </profiles>
 </project>
