@@ -183,7 +183,7 @@ java -cp target/webpbridge-0.1.0-SNAPSHOT.jar examples/Convert.java input.png ou
 
 ## Native loading
 
-The loader selects `/native/<os>-<arch>/<library>` from the JAR, extracts it into a private temporary directory, then loads it. Supported platform names are linux, macos and windows; architectures x86_64 and aarch64. Support requires building and testing for the actual target; Linux binaries depend on the build system's libc. Alternatively set `-Dwebp.jni.path=/absolute/path/to/library` to load an explicitly built JNI library. An executable temporary filesystem is required for bundled loading. On recent JDKs, use `--enable-native-access=ALL-UNNAMED` when required by the runtime.
+The loader selects `/native/<os>-<arch>/<library>` from the JAR, extracts it into a private temporary directory, then loads it. Supported platform names are linux, macos and windows; architectures x86_64 and aarch64. Support requires building and testing for the actual target; Linux binaries depend on the build system's libc. Alternatively set `-Dwebp.jni.path=/absolute/path/to/library` to load an explicitly built JNI library. An executable temporary filesystem is required for bundled loading. Each process holds a lock on its extraction directory. On load, `webpbridge-*` directories left by processes that have exited (Windows cannot delete a loaded DLL at shutdown) are removed on a best-effort basis; directories still locked by a running JVM, recently created ones, symbolic links and directories containing anything other than the extracted library are left alone, and cleanup failures never affect loading. On recent JDKs, use `--enable-native-access=ALL-UNNAMED` when required by the runtime.
 
 ## Behavior and limits
 
