@@ -41,7 +41,7 @@ Decoded images are `TYPE_INT_ARGB` when the bitstream has alpha and `TYPE_INT_RG
 
 `WebPOptions` is immutable and shareable; builders create independent snapshots. Defaults are quality 80, lossy encoding, 16 million pixels and 64 MiB encoded input. Quality controls lossy quality or lossless compression effort; set `.lossless(true)` for exact lossless output, including RGB under fully transparent pixels.
 
-- `encode(image, options)` checks source pixels before allocating RGBA copies.
+- `encode(image, options)` checks source pixels before allocating pixel copies.
 - `decode(bytes, options)` checks encoded bytes and decoded pixels.
 - `read` and `inspect` bound input bytes as they read, including streams with unknown length. Oversize input is rejected with `IllegalArgumentException`; determining excess can consume one byte beyond the configured limit.
 - These limits are **not a total-memory budget**. Java/native copies and temporary allocations are additional. I/O and native calls have no timeout, forced cancellation, or streaming-pixel guarantee.
@@ -79,7 +79,7 @@ The first call attempts native loading and returns a cached immutable diagnostic
 
 Measured on **Apple M1 (ARM64), macOS 26.4.1, Azul OpenJDK 25.0.3**, on 2026-11-01, using JMH 1.37. Compared against [webp-imageio 0.11.0](https://github.com/usefulness/webp-imageio) and [TwelveMonkeys 3.15.3](https://github.com/haraldk/TwelveMonkeys). TwelveMonkeys supports WebP decoding only. Both native implementations used libwebp 1.6.0; the competitor's version was queried from its bundled native binary.
 
-Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout.
+Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout. These results predate the copy-free pixel path in [#12](https://github.com/shinyook/webpbridge/issues/12), which removed about two thirds of webpbridge's Java heap allocation per decode; the charts have not been regenerated yet.
 
 ### Performance at a glance
 
@@ -189,11 +189,11 @@ The loader selects `/native/<os>-<arch>/<library>` from the JAR, extracts it int
 
 - Lossy quality is a finite number from 0 to 100. Alpha is preserved.
 - Lossless encoding uses `exact=1`, preserving RGB even under fully transparent pixels.
-- Images are normalized through `BufferedImage.getRGB` to 8-bit sRGB RGBA. Source metadata, ICC profiles and high bit depth are not preserved.
+- Images are normalized to 8-bit sRGB ARGB. `TYPE_INT_ARGB` and `TYPE_INT_RGB` images (including subimages) are copied from their raster without color conversion; other types go through `BufferedImage.getRGB`. Both paths produce identical output. Source metadata, ICC profiles and high bit depth are not preserved.
 - Animation is rejected. This is not an ImageIO plugin.
 - Default decoding limit: 16 million pixels. Override via `decode(bytes, maxPixels)`.
 - Invalid input/options produce `IllegalArgumentException`; native encoding failures produce `IllegalStateException`; missing binaries produce `UnsatisfiedLinkError`.
-- Calls use independent native state and can run concurrently. Each call copies pixel data; account for Java and native memory in addition to the pixel limit. No streaming, cancellation or decode timeout is provided.
+- Calls use independent native state and can run concurrently. Each call copies pixel data; account for Java and native memory in addition to the pixel limit. Decoding allocates the returned image's `int[]` (4 bytes/pixel) plus a temporary native buffer of the same size; encoding allocates one `int[]` copy plus libwebp's picture and working memory. No streaming, cancellation or decode timeout is provided.
 
 ## License
 

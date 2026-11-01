@@ -1,6 +1,12 @@
 package io.github.shinyook.webpbridge;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
+import java.awt.image.Raster;
+import java.awt.image.SinglePixelPackedSampleModel;
+import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +21,8 @@ public final class WebP {
     private WebP() {}
     private static final class Native {
         static { NativeLoader.load(); }
-        static native byte[] encode(byte[] rgba, int width, int height, float quality, boolean lossless);
-        static native byte[] decode(byte[] data, int maxPixels);
+        static native byte[] encode(int[] argb, int width, int height, boolean opaque, float quality, boolean lossless);
+        static native int[] decode(byte[] data, int maxPixels, int[] info);
         static native byte[] inspect(byte[] data);
         static native long versions();
     }
@@ -109,14 +115,20 @@ public final class WebP {
         int w = image.getWidth(), h = image.getHeight();
         if (w > 16383 || h > 16383 || (long) w * h > Integer.MAX_VALUE / 4)
             throw new IllegalArgumentException("image exceeds supported dimensions");
-        int[] pixels = image.getRGB(0, 0, w, h, null, 0, w);
-        byte[] rgba = new byte[pixels.length * 4];
-        for (int i = 0; i < pixels.length; i++) {
-            int c = pixels[i], j = i * 4;
-            rgba[j] = (byte) (c >>> 16); rgba[j + 1] = (byte) (c >>> 8);
-            rgba[j + 2] = (byte) c; rgba[j + 3] = (byte) (c >>> 24);
+        int type = image.getType();
+        WritableRaster raster = image.getRaster();
+        int[] argb;
+        boolean opaque = false;
+        if ((type == BufferedImage.TYPE_INT_ARGB || type == BufferedImage.TYPE_INT_RGB)
+                && raster.getDataBuffer() instanceof DataBufferInt
+                && raster.getSampleModel() instanceof SinglePixelPackedSampleModel) {
+            // Already packed 0xAARRGGBB (alpha ignored for RGB): copy rows without color conversion.
+            argb = (int[]) raster.getDataElements(0, 0, w, h, null);
+            opaque = type == BufferedImage.TYPE_INT_RGB;
+        } else {
+            argb = image.getRGB(0, 0, w, h, null, 0, w);
         }
-        return Native.encode(rgba, w, h, quality, lossless);
+        return Native.encode(argb, w, h, opaque, quality, lossless);
     }
 
     /** Decodes a static image, with a default limit of 16 million pixels.
@@ -129,17 +141,14 @@ public final class WebP {
         Objects.requireNonNull(data, "data");
         if (maxPixels <= 0 || maxPixels > (Integer.MAX_VALUE - 8) / 4)
             throw new IllegalArgumentException("invalid maxPixels");
-        byte[] raw = Native.decode(data, maxPixels);
-        int w = readInt(raw, 0), h = readInt(raw, 4);
-        boolean alpha = raw[8] != 0;
-        int[] pixels = new int[w * h];
-        for (int i = 0; i < pixels.length; i++) {
-            int j = 12 + 4 * i;
-            pixels[i] = ((raw[j + 3] & 255) << 24) | ((raw[j] & 255) << 16)
-                | ((raw[j + 1] & 255) << 8) | (raw[j + 2] & 255);
-        }
-        BufferedImage image = new BufferedImage(w, h, alpha ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
-        image.setRGB(0, 0, w, h, pixels, 0, w);
+        int[] info = new int[3];
+        int[] pixels = Native.decode(data, maxPixels, info);
+        int w = info[0], h = info[1];
+        boolean alpha = info[2] != 0;
+        int[] masks = alpha ? new int[]{0xff0000, 0xff00, 0xff, 0xff000000} : new int[]{0xff0000, 0xff00, 0xff};
+        WritableRaster raster = Raster.createPackedRaster(new DataBufferInt(pixels, pixels.length), w, h, w, masks, null);
+        ColorModel model = alpha ? ColorModel.getRGBdefault() : new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
+        BufferedImage image = new BufferedImage(model, raster, false, null);
         return image;
     }
     /** Reads a WebP file using default input limits.
