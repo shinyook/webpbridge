@@ -44,3 +44,23 @@ jobs:
         with:
           name: stress-reports
           path: target/surefire-reports/
+  native-memory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=RelWithDebInfo -DWEBP_JNI_NATIVE_TESTS=ON -DWEBP_JNI_SANITIZERS=ON
+      - run: cmake --build build-sanitize --target jni_memory_test --parallel 3
+      - run: ctest --test-dir build-sanitize --output-on-failure -V
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-memory-reports
+          path: build-sanitize/Testing/Temporary/

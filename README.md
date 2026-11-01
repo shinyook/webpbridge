@@ -64,3 +64,15 @@ Java/JNI wrapper: MIT. Bundled libwebp: upstream BSD-style license and patent gr
 ## Extended validation
 
 After the native install step, `mvn -Pstress test` runs 4096×4096 lossy/lossless round trips and two concurrent 2048×2048 lossless round trips with JNI checks and a 2 GiB Java heap limit. It checks every lossless pixel and every lossy alpha value, default decode-limit rejection above 16 million pixels, and successful decoding with an explicit larger limit. Test timeouts are failure detection, not interruption of an in-flight native codec. Run this suite in a process with an external time limit on CI. Measurements are workload-specific, not a throughput or peak-memory guarantee.
+
+### Memory diagnostics
+
+The stress profile also runs 2,000 real-JVM encode/decode cycles with valid inputs and rejection paths. A separate native harness exercises the actual JNI C entry points through a small array/exception adapter, including simulated JNI pin and output-allocation failures. This enables ASan/UBSan and, on Linux, LeakSanitizer without suppressing JVM runtime allocations:
+
+```sh
+cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=RelWithDebInfo -DWEBP_JNI_NATIVE_TESTS=ON -DWEBP_JNI_SANITIZERS=ON
+cmake --build build-sanitize --target jni_memory_test --parallel
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ctest --test-dir build-sanitize --output-on-failure -V
+```
+
+Use Linux for leak detection. Apple ASan requires `detect_leaks=0`; that run checks memory access and undefined behavior but does not establish leak freedom. The standalone adapter does not model the entire JVM or force failures inside every libwebp allocation. The real-JVM soak validates integration but is not itself a native leak detector. See [validation results](docs/validation.md).
