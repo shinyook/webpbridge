@@ -46,7 +46,43 @@ Four Maven Failsafe integration tests passed locally (macOS ARM64 / JDK 25.0.3):
 
 The platform matrix covers the architectures reported by each hosted runner; it does not establish all OS/architecture combinations, Linux musl compatibility, or support for older glibc versions. Multi-platform fat-JAR distribution is still outside this validation scope.
 
-## Final CI evidence
+## #6 Options and explicit input limits (2026-11-01)
+
+`WebPOptions` is an immutable, validated snapshot (quality 0–100, lossless flag, `maxPixels`, `maxInputBytes`); builders stay independent after `build()`. `OptionsTest` rejects NaN, infinite and out-of-range quality plus zero, negative and `Integer.MAX_VALUE` limits; checks the exact pixel and byte boundaries (limit passes, limit − 1 is rejected) for both encode and decode; and confirms a pixel-exact lossless round trip including alpha. The existing `encode(image, quality)`, `encodeLossless` and `decode(bytes[, maxPixels])` overloads keep their previous behaviour and limits, and the existing suites for them still pass unchanged.
+
+The limits bound input size and decoded pixel count; they are not a total-memory budget.
+
+## #7 Header inspection without pixel decoding (2026-11-01)
+
+`WebP.inspect` reads the header through libwebp's `WebPGetFeatures` and allocates no decoded pixel buffer. `InspectTest` covers lossless with alpha, opaque lossy, a hand-built animated VP8X header (inspected, while decoding it is still rejected), empty, truncated and bad-magic inputs, and the byte limit. Inspection deliberately does not apply the pixel limit, so callers can decide about dimensions before decoding. A native inspect entry point was added to the sanitizer harness, and pins stay balanced under ASan/UBSan/LeakSanitizer.
+
+A successful inspection only proves the header is readable. It does not prove the whole bitstream is valid.
+
+## #8 Bounded file and stream I/O (2026-11-01)
+
+Path and `InputStream` overloads for `read`/`inspect`, and Path/`OutputStream` overloads for `write`. `IoTest` checks round trips through a path containing spaces. Caller streams are never closed or flushed. Unknown-length and zero-progress streams are bounded while reading, so an endless stream under an 8-byte limit stops after 9 bytes. An existing file is never overwritten (`FileAlreadyExistsException`, contents preserved). A validation failure leaves the stream empty and creates no file, and stream `IOException`s propagate unchanged.
+
+All data is buffered in memory, and there is no cancellation or timeout. A failure partway through I/O can leave a partial stream write or a partial newly created file.
+
+## #9 Runtime diagnostics and service documentation (2026-11-01)
+
+`WebP.runtimeInfo()` returns a cached, immutable snapshot with availability, failure reason, running platform, the platforms actually bundled in the JAR, and the encoder/decoder versions reported by the loaded libwebp (1.6.0). `RuntimeInfoTest` checks those values and confirms the platform list cannot be modified. A new packaged-JAR integration test starts a fresh JVM with a missing explicit native path, and repeated diagnostic calls return the same unavailable snapshot naming that path instead of throwing. The README now documents upload validation, options and limits, file/stream ownership, and startup diagnostics in English.
+
+Diagnostics do not retry or repair a failed load (that needs a new class loader or JVM), and nothing here interrupts native calls.
+
+### CI evidence for #6–#9
+
+[Build and test run 41315518098](https://github.com/shinyook/webpbridge/actions/runs/41315518098) and [release-candidate run 41315557101](https://github.com/shinyook/webpbridge/actions/runs/41315557101) validate commit `7f7924a`. Every job passed; publishing was skipped by design.
+
+| Hosted runtime | Java | Unit checks | Packaged-JAR checks |
+| --- | --- | --- | --- |
+| Linux amd64 | 17 / 25 | 43 each | 5 each |
+| Windows amd64 | 17 / 25 | 43 each | 5 each |
+| macOS aarch64 | 17 / 25 | 43 each | 5 each |
+
+The stress job and the native-memory job (2,000 codec cycles, 1,000 malformed inputs, allocation/pin failure paths, no outstanding pins) also passed. The release-candidate run built native libraries for all three platforms, assembled the bundle, and verified it on each OS with JDK 17 and 25.
+
+## Final CI evidence for #1–#5
 
 [Run 41300435343](https://github.com/shinyook/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
 
