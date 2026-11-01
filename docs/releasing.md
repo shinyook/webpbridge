@@ -52,3 +52,9 @@ Signing and authenticated Portal validation cannot be confirmed by an unsigned c
 For a local single-platform package, install the native resource as documented in the root README, then run `mvn -Prelease -Dgpg.skip=true verify`. This checks source/Javadoc generation without signing or publishing. It is not a substitute for the multi-platform candidate workflow. The `central` profile rejects SNAPSHOT versions and missing native resources/license notices during Maven validation. It must only be used with the complete native bundle and release credentials.
 
 See [Central publication requirements](https://central.sonatype.org/publish/requirements/) for source/Javadoc, POM metadata and signing requirements.
+
+## Initial candidate validation record (2026-11-01)
+
+[Candidate run 41302802236](https://github.com/shinyook/webpbridge/actions/runs/41302802236) passed native builds, complete-bundle assembly, source/Javadoc generation, and fresh-JVM tests of the same multi-platform JAR on all six OS/JDK combinations. All 11 non-publishing jobs passed; the publishing job was intentionally skipped (`publish=false`). The downloaded candidate's SHA-256 manifest and exact three-native resource set were independently checked. The main JAR is 900,193 bytes. This is an unsigned candidate, not a Maven Central release.
+
+Local validation also passed seven assembler tests (including Windows CRLF notice normalization, missing/duplicate platforms, conflicting notice text and unexpected payload rejection). The Maven signing profile was exercised with a temporary, passphrase-protected test key; main/source/Javadoc JAR signatures and the POM signature independently verified. That test key was deleted and is not a release signing identity. Authenticated Central validation and publication still require the maintainer's verified namespace, Portal token and published signing public key.
