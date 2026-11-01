@@ -134,6 +134,19 @@ Cleanup only runs when a later process loads the bundled library. A host that ne
 
 The stress job (large images, the 2,000-cycle JVM soak and cwebp/dwebp interoperability) and the native-memory job under ASan/UBSan/LeakSanitizer also passed. Intermediate commits `173dd0f` (#10, #11) and `3e966ac` (#12) also passed their own runs. [Release-candidate run 41320045896](https://github.com/prismpx/webpbridge/actions/runs/41320045896) on `3afb3d2` built all three native libraries, assembled the multi-platform JAR and verified it with fresh JVMs on all three operating systems with JDK 17 and 25 (publishing skipped).
 
+## #14 Coordinates moved to io.github.prismpx (2026-11-01)
+
+Before the first release, the group ID changed from `io.github.shinyook` to `io.github.prismpx` and the Java package to `io.github.prismpx.webpbridge`. The change covers the JNI symbol names, the native test harness, benchmarks, examples, the CI benchmark entry point, the POM `url` and `scm`, the README and these docs. Outside the historical benchmark result files, the only remaining `shinyook` reference is the POM developer entry. The built Linux library exports only `Java_io_github_prismpx_webpbridge_*` symbols.
+
+[Build and test run 41347821628](https://github.com/prismpx/webpbridge/actions/runs/41347821628) on commit `7c22dc2` passed every job:
+- 59 unit and 6 packaged-JAR checks on each of Linux, Windows and macOS with JDK 17 and 25
+- the stress job
+- the native-memory job
+
+[Release-candidate run 41348071566](https://github.com/prismpx/webpbridge/actions/runs/41348071566) on the same commit built, assembled and verified the multi-platform JAR on all six OS/JDK combinations, with publishing skipped.
+
+Publishing under `io.github.prismpx` requires that namespace to be verified in the Central Portal. Run links use the `prismpx/webpbridge` location and redirect once the repository has been transferred.
+
 ## Final CI evidence for #1–#5
 
 [Run 41300435343](https://github.com/prismpx/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
