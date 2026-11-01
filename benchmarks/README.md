@@ -51,3 +51,7 @@ The GC profiler's `gc.alloc.rate.norm` measures **Java heap bytes per operation*
 These synthetic opaque workloads do not represent photographs, alpha-heavy content, 4K/8K images, metadata, all BufferedImage types, concurrent throughput, cold starts, or other operating systems/CPUs/JDKs. Comparing different wrapper APIs also measures their different copying and ImageIO overheads. Do not generalize one machine's ranking into a universal performance claim.
 
 Recorded results and environment are linked from the root README.
+
+## Regenerate charts
+
+Install the pinned plotting dependency from `benchmarks/requirements-charts.txt` in a virtual environment, then run `python benchmarks/charts.py`. The generator reads the same committed JMH JSON used by the tables and exports PNG and SVG files under `benchmarks/results/charts/`. Charts preserve all four workloads and include uncertainty; no timing measurements are rerun. The root README embeds PNGs for broad renderer support. Run `python benchmarks/report.py` separately to regenerate tables.

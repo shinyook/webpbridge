@@ -18,6 +18,23 @@ Measured on **Apple M1 (ARM64), macOS 26.4.1, Azul OpenJDK 25.0.3**, on 2026-11-
 
 Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout.
 
+### Performance at a glance
+
+Lower bars mean less time or fewer Java heap allocations per operation. Whiskers show 99.9% confidence-interval half-widths. Every panel uses a linear axis starting at zero, with its own range; compare implementations **within** a panel.
+
+![Encoding time comparison, including confidence intervals](benchmarks/results/charts/encode-time.png)
+
+![Decoding time comparison, including confidence intervals](benchmarks/results/charts/decode-time.png)
+
+<details>
+<summary>Java heap allocation comparisons (excludes native memory and peak RSS)</summary>
+
+![Encoding Java heap allocation per operation](benchmarks/results/charts/encode-allocation.png)
+
+![Decoding Java heap allocation per operation](benchmarks/results/charts/decode-allocation.png)
+
+</details>
+
 <!-- BEGIN BENCHMARK TABLES -->
 Average **ms/op ± JMH 99.9% confidence-interval half-width**; lower is better. Each cell contains 10 measured iterations across two forks.
 
