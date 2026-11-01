@@ -24,6 +24,32 @@ public final class WebP {
         return encodeImage(image, 75, true);
     }
 
+    /** Encodes after checking the source pixel limit, before allocating RGBA copies.
+     * @param image source image
+     * @param options immutable encoding settings
+     * @return encoded WebP bytes
+     */
+    public static byte[] encode(BufferedImage image, WebPOptions options) {
+        Objects.requireNonNull(image, "image"); Objects.requireNonNull(options, "options");
+        if ((long)image.getWidth()*image.getHeight()>options.maxPixels())
+            throw new IllegalArgumentException("Source image exceeds pixel limit");
+        return encodeImage(image,options.quality(),options.lossless());
+    }
+
+    /** Decodes with independent encoded-byte and decoded-pixel limits.
+     * @param data encoded WebP
+     * @param options input limits; encoding quality and lossless flag are ignored
+     * @return decoded image
+     */
+    public static BufferedImage decode(byte[] data, WebPOptions options) {
+        checkInput(data,options);
+        return decode(data,options.maxPixels());
+    }
+    private static void checkInput(byte[] data, WebPOptions options) {
+        Objects.requireNonNull(data,"data"); Objects.requireNonNull(options,"options");
+        if(data.length>options.maxInputBytes()) throw new IllegalArgumentException("Encoded input exceeds byte limit");
+    }
+
     private static byte[] encodeImage(BufferedImage image, float quality, boolean lossless) {
         Objects.requireNonNull(image, "image");
         int w = image.getWidth(), h = image.getHeight();
