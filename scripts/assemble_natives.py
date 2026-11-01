@@ -31,7 +31,9 @@ def assemble(source, destination):
                 name = parts[-1]
                 if name not in {'COPYING', 'PATENTS', 'AUTHORS'}:
                     raise ValueError(f'Unexpected license file: {relative}')
-                content = path.read_bytes()
+                # Git on Windows can check the same notice out with CRLF endings.
+                # Compare canonical line endings, preserving every text byte.
+                content = path.read_bytes().replace(b'\r\n', b'\n')
                 if name in licenses and licenses[name] != content:
                     raise ValueError(f'License mismatch across platforms: {name}')
                 licenses[name] = content

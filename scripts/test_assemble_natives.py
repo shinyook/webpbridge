@@ -41,6 +41,14 @@ class AssemblyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'duplicate'):
             assemble(self.source, self.destination)
 
+    def test_windows_license_line_endings_are_normalized(self):
+        for platform in SUPPORTED:
+            for notice in ['COPYING', 'PATENTS', 'AUTHORS']:
+                p = self.source / platform / 'META-INF/licenses/libwebp' / notice
+                p.write_bytes((notice+'\r\n' if platform == 'windows-x86_64' else notice+'\n').encode())
+        assemble(self.source, self.destination)
+        self.assertEqual((self.destination/'META-INF/licenses/libwebp/PATENTS').read_bytes(), b'PATENTS\n')
+
     def test_conflicting_licenses_are_rejected(self):
         (self.source / 'linux-x86_64/META-INF/licenses/libwebp/COPYING').write_text('different version')
         with self.assertRaisesRegex(ValueError, 'License mismatch'):
