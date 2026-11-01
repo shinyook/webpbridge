@@ -82,6 +82,58 @@ Diagnostics do not retry or repair a failed load (that needs a new class loader 
 
 The stress job and the native-memory job (2,000 codec cycles, 1,000 malformed inputs, allocation/pin failure paths, no outstanding pins) also passed. The release-candidate run built native libraries for all three platforms, assembled the bundle, and verified it on each OS with JDK 17 and 25.
 
+## #10 Opaque images decode as TYPE_INT_RGB (2026-11-01)
+
+Decoding returns `TYPE_INT_RGB` when the bitstream has no alpha and `TYPE_INT_ARGB` otherwise, on every decode and read overload. `DecodedTypeTest` (4 tests) covers opaque lossy and lossless input (pixel-exact), transparent input, and a WebP → JPEG → read round trip through ImageIO. Before this change, `ImageIO.write(decoded, "jpg", …)` returned `false` for opaque input. The new tests fail on the previous implementation and pass on the new one.
+
+Pixel values seen through `getRGB` are unchanged (opaque pixels report alpha 0xFF either way). Only the returned image type differs.
+
+## #11 inspect accepts what decode accepts (2026-11-01)
+
+`inspect` now uses the same container rules as decoding. The declared RIFF payload must be present, bytes after it are ignored, and raw VP8/VP8L bitstreams are accepted. Empty, truncated, bad-magic and non-WebP containers are still rejected. `InspectTest` adds a trailing-byte test and a consistency sweep of 10,246 inputs (every prefix of a lossy and a lossless stream up to 8 bytes past the end, plus 4,000 seeded mutations, seed 20261101). For all 3,537 inputs that `decode` accepted, `inspect` succeeded with the same width, height and alpha. Before the change, the trailing-byte and consistency tests failed.
+
+`inspect` remains header-only. For raw bitstreams and for damage beyond the header, `inspect` can succeed where `decode` then fails.
+
+## #12 Copy-free pixel paths (2026-11-01)
+
+Decoding fills the returned image's `int[]` straight from libwebp's BGRA output (ARGB on big-endian hosts) and wraps it in a `DataBufferInt` raster. The intermediate `byte[]`, the per-pixel conversion and the `setRGB` copy are gone. Encoding passes packed ARGB ints row by row into `WebPPicture`. `TYPE_INT_ARGB` and `TYPE_INT_RGB` rasters, including subimages, are copied without color conversion; other types still use `getRGB`.
+
+Equivalence was checked three ways:
+- A local differential run compared the previous build with the new one on 198 cases: 11 image types, 3 sizes, full images and subimages, lossless, q80 and q5. Every encoded byte and every decoded pixel was identical.
+- `PixelPathTest` asserts that the fast path and the generic path produce byte-identical lossless and lossy output, including subimages and a 1×1 corner subimage. It also checks that an undefined high byte in `TYPE_INT_RGB` rasters is ignored, and that decoded images are independent and writable.
+- The native sanitizer harness covers the new `int[]` entry points, the opaque flag and the allocation and exception paths.
+
+Local timing on a shared 2-vCPU Linux container (OpenJDK 21, 4K test image, same harness before and after, two rounds):
+
+| Operation | Before | After |
+| --- | --- | --- |
+| Decode time | 460–468 ms | 363–391 ms |
+| Java heap allocated per decode | 99.5 MB | 33.2 MB |
+| Encode q80 time | 1,745–2,042 ms | 1,732–1,867 ms |
+| Java heap allocated per encode | 71.5 MB | 38.4 MB |
+
+Encode time is dominated by libwebp, so it is roughly unchanged. These are one machine's observations, not a benchmark. The README JMH charts predate this change and have not been regenerated.
+
+## #13 Reclaiming extraction directories (2026-11-01)
+
+Each process holds a lock on `.lock` in its extraction directory. Before extracting, the loader removes `webpbridge-*` directories under `java.io.tmpdir` in two cases: the lock can be acquired and the directory is more than 10 seconds old, or the directory has no lock file and is more than 1 hour old (left by earlier releases). Only directories containing nothing but the lock and the library are touched. Symbolic links are never followed, the library is deleted before the lock, and every failure is ignored.
+
+`StaleCleanupTest` (7 tests) covers stale and legacy removal, both grace periods, a lock held in the same JVM, a lock held by another live JVM, foreign content, non-directories, unrelated names, symlinks (skipped where they cannot be created) and an unreadable root. A new packaged-JAR integration test plants a stale directory and runs two fresh JVMs that share one temporary directory. On Windows, the first JVM left its DLL directory behind on exit, exactly the problem being fixed, and the second JVM removed it. On Linux and macOS nothing was left after exit.
+
+Cleanup only runs when a later process loads the bundled library. A host that never starts webpbridge again keeps its last directory. Directories in other users' temporary folders are not reachable.
+
+### CI evidence for #10–#13
+
+[Build and test run 41319840094](https://github.com/shinyook/webpbridge/actions/runs/41319840094) validates the code now at commit `3afb3d2`. All jobs passed. (These runs executed before an authorship-only history rewrite on 2026-11-01, when the identical trees were commits `ff996c8`, `32e33d7` and `dfbb03e`.)
+
+| Hosted runtime | Java | Unit checks | Packaged-JAR checks |
+| --- | --- | --- | --- |
+| Linux amd64 | 17 / 25 | 59 each | 6 each |
+| Windows amd64 | 17 / 25 | 59 each | 6 each |
+| macOS aarch64 | 17 / 25 | 59 each | 6 each |
+
+The stress job (large images, the 2,000-cycle JVM soak and cwebp/dwebp interoperability) and the native-memory job under ASan/UBSan/LeakSanitizer also passed. Intermediate commits `173dd0f` (#10, #11) and `3e966ac` (#12) also passed their own runs. [Release-candidate run 41320045896](https://github.com/shinyook/webpbridge/actions/runs/41320045896) on `3afb3d2` built all three native libraries, assembled the multi-platform JAR and verified it with fresh JVMs on all three operating systems with JDK 17 and 25 (publishing skipped).
+
 ## Final CI evidence for #1–#5
 
 [Run 41300435343](https://github.com/shinyook/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
