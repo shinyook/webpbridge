@@ -70,8 +70,8 @@ int main(void) {
             dispose(info);
             jbyteArray decoded=DECODE(encoded,4096);
             assert(decoded && !pending_exception && pins==0);
-            assert(((Array *)decoded)->length==source->length+8);
-            if(lossless) assert(memcmp(((Array *)decoded)->bytes+8,source->bytes,(size_t)source->length)==0);
+            assert(((Array *)decoded)->length==source->length+12);
+            if(lossless) assert(memcmp(((Array *)decoded)->bytes+12,source->bytes,(size_t)source->length)==0);
             dispose(decoded);
             REJECT(DECODE(encoded,4095));
             Array *truncated=array(((Array *)encoded)->length/2);

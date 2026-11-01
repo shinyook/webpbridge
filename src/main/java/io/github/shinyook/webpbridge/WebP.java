@@ -119,23 +119,26 @@ public final class WebP {
         return Native.encode(rgba, w, h, quality, lossless);
     }
 
-    /** Decodes a static image, with a default limit of 16 million pixels. */
+    /** Decodes a static image, with a default limit of 16 million pixels.
+     * Returns TYPE_INT_ARGB when the bitstream has alpha, otherwise TYPE_INT_RGB. */
     public static BufferedImage decode(byte[] data) { return decode(data, 16_000_000); }
 
-    /** Rejects images above maxPixels before allocating the decoded pixel buffer. */
+    /** Rejects images above maxPixels before allocating the decoded pixel buffer.
+     * Returns TYPE_INT_ARGB when the bitstream has alpha, otherwise TYPE_INT_RGB. */
     public static BufferedImage decode(byte[] data, int maxPixels) {
         Objects.requireNonNull(data, "data");
         if (maxPixels <= 0 || maxPixels > (Integer.MAX_VALUE - 8) / 4)
             throw new IllegalArgumentException("invalid maxPixels");
         byte[] raw = Native.decode(data, maxPixels);
         int w = readInt(raw, 0), h = readInt(raw, 4);
+        boolean alpha = raw[8] != 0;
         int[] pixels = new int[w * h];
         for (int i = 0; i < pixels.length; i++) {
-            int j = 8 + 4 * i;
+            int j = 12 + 4 * i;
             pixels[i] = ((raw[j + 3] & 255) << 24) | ((raw[j] & 255) << 16)
                 | ((raw[j + 1] & 255) << 8) | (raw[j + 2] & 255);
         }
-        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(w, h, alpha ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
         image.setRGB(0, 0, w, h, pixels, 0, w);
         return image;
     }

@@ -33,7 +33,9 @@ BufferedImage image = WebP.decode(uploadBytes, options);
 byte[] compressed = WebP.encode(image, options);
 ```
 
-`inspect` reports width, height, alpha, animation and compression format from the container header without decoding a pixel buffer. It still receives/buffers the encoded input and does **not** establish that the complete pixel bitstream is valid. Animated headers can be inspected, but animation decoding remains unsupported. Inspection applies the byte limit, not the pixel limit, so applications can examine dimensions before choosing whether to decode.
+`inspect` reports width, height, alpha, animation and compression format from the container header without decoding a pixel buffer. It still receives/buffers the encoded input and does **not** establish that the complete pixel bitstream is valid. Animated headers can be inspected, but animation decoding remains unsupported. Inspection applies the byte limit, not the pixel limit, so applications can examine dimensions before choosing whether to decode. Inspection accepts the same containers as decoding: a complete RIFF payload (bytes after it are ignored) or a raw VP8/VP8L bitstream. Any input that `decode` accepts is accepted by `inspect` with the same dimensions.
+
+Decoded images are `TYPE_INT_ARGB` when the bitstream has alpha and `TYPE_INT_RGB` otherwise, so opaque results can be written directly as JPEG with `ImageIO`.
 
 ### Options and limits
 

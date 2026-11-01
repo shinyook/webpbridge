@@ -64,19 +64,20 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
     }
     int w = features.width, h = features.height;
     int64_t size = (int64_t)w * h * 4;
-    if (w <= 0 || h <= 0 || (int64_t)w * h > max_pixels || size > INT_MAX - 8) {
+    if (w <= 0 || h <= 0 || (int64_t)w * h > max_pixels || size > INT_MAX - 12) {
         (*env)->ReleaseByteArrayElements(env, input, data, JNI_ABORT);
         INVALID("Decoded image exceeds pixel limit"); return NULL;
     }
     uint8_t *rgba = WebPDecodeRGBA((const uint8_t *)data, (size_t)length, NULL, NULL);
     (*env)->ReleaseByteArrayElements(env, input, data, JNI_ABORT);
     if (!rgba) { INVALID("WebP decoding failed"); return NULL; }
-    jbyteArray result = (*env)->NewByteArray(env, (jsize)size + 8);
+    jbyteArray result = (*env)->NewByteArray(env, (jsize)size + 12);
     if (result) {
-        uint8_t header[8];
+        uint8_t header[12] = {0};
         for (int i = 0; i < 4; i++) { header[i] = (uint8_t)((uint32_t)w >> (24 - 8*i)); header[4+i] = (uint8_t)((uint32_t)h >> (24 - 8*i)); }
-        (*env)->SetByteArrayRegion(env, result, 0, 8, (const jbyte *)header);
-        if (!(*env)->ExceptionCheck(env)) (*env)->SetByteArrayRegion(env, result, 8, (jsize)size, (const jbyte *)rgba);
+        header[8] = (uint8_t)(features.has_alpha != 0);
+        (*env)->SetByteArrayRegion(env, result, 0, 12, (const jbyte *)header);
+        if (!(*env)->ExceptionCheck(env)) (*env)->SetByteArrayRegion(env, result, 12, (jsize)size, (const jbyte *)rgba);
     }
     WebPFree(rgba);
     return result;
@@ -87,16 +88,27 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
     (void)cls;
     if (!input) { INVALID("Input must not be null"); return NULL; }
     jsize length=(*env)->GetArrayLength(env,input);
-    if (length<12) { INVALID("Incomplete RIFF/WebP header"); return NULL; }
     jbyte *bytes=(*env)->GetByteArrayElements(env,input,NULL);
     if (!bytes) return NULL;
     const uint8_t *data=(const uint8_t *)bytes;
-    uint32_t declared=(uint32_t)data[4] | ((uint32_t)data[5]<<8) | ((uint32_t)data[6]<<16) | ((uint32_t)data[7]<<24);
+    size_t size=(size_t)length;
+    VP8StatusCode status=VP8_STATUS_BITSTREAM_ERROR;
     WebPBitstreamFeatures features;
-    int container_ok=memcmp(data,"RIFF",4)==0 && memcmp(data+8,"WEBP",4)==0 && (uint64_t)declared+8==(uint64_t)length;
-    VP8StatusCode status=container_ok ? WebPGetFeatures(data,(size_t)length,&features) : VP8_STATUS_BITSTREAM_ERROR;
+    if (size>=4 && memcmp(data,"RIFF",4)==0) {
+        /* Same container rules as decoding: the declared RIFF payload must be
+         * present, and bytes after it are ignored. WebPGetFeatures alone does
+         * not detect a truncated RIFF payload. */
+        if (size>=12 && memcmp(data+8,"WEBP",4)==0) {
+            uint32_t declared=(uint32_t)data[4] | ((uint32_t)data[5]<<8) | ((uint32_t)data[6]<<16) | ((uint32_t)data[7]<<24);
+            if ((uint64_t)declared+8<=(uint64_t)size)
+                status=WebPGetFeatures(data,(size_t)declared+8,&features);
+        }
+    } else {
+        /* Raw VP8/VP8L bitstreams are accepted by libwebp decoding too. */
+        status=WebPGetFeatures(data,size,&features);
+    }
     (*env)->ReleaseByteArrayElements(env,input,bytes,JNI_ABORT);
-    if (status!=VP8_STATUS_OK) { INVALID("Invalid or incomplete RIFF/WebP header"); return NULL; }
+    if (status!=VP8_STATUS_OK) { INVALID("Invalid or incomplete WebP header"); return NULL; }
     uint8_t header[12]={0};
     for (int i=0;i<4;i++) {
         header[i]=(uint8_t)((uint32_t)features.width>>(24-8*i));
