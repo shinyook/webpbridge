@@ -40,6 +40,8 @@ jobs:
       - run: cmake --build build --config Release --parallel 3
       - run: cmake --install build --config Release --prefix target/classes --component webpjni
       - run: mvn --batch-mode -Pstress test
+      - run: sudo apt-get update && sudo apt-get install -y webp
+      - run: mvn --batch-mode -Pinterop test
       - uses: actions/upload-artifact@v4
         if: always()
         with:

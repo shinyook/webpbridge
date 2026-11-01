@@ -29,3 +29,13 @@ The native adapter models only the JNI operations the bridge uses, rather than e
 ## #3 Malformed inputs and boundaries (2026-11-01)
 
 `mvn -Dtest=MalformedInputTest test` passed three tests on local macOS ARM64 / JDK 25.0.3. The deterministic corpus contains 11,238 decodes: all truncated prefixes of independently encoded lossy/lossless random images, seeded mutations, RIFF/chunk corruption, and random byte arrays. Successful mutated images are allowed if within the 4,096-pixel limit; other cases must produce `IllegalArgumentException`. Unexpected exceptions fail the test. Additional tests cover oversized VP8X headers, width 1/16383/16384, height 16384 rejection, quality 0/100, and invalid decode limits. Runtime was 0.456 s. The native sanitizer adapter also adds 1,000 truncated/mutated inputs. Fixed-seed mutation is regression coverage, not continuous coverage-guided fuzzing. The external CI job timeout bounds a stuck native call.
+
+## #4 Image types and external codec interoperability (2026-11-01)
+
+Local macOS ARM64 / JDK 25.0.3, cwebp/dwebp 1.6.0:
+
+- 23 image-type tests passed: lossless pixel equality and lossy alpha equality for 11 BufferedImage types, plus a subimage with parent stride/offset. Types include packed RGB/ARGB, premultiplied alpha, BGR/ABGR, 8/16-bit grayscale, RGB565, binary and indexed images. Equality is against Java `getRGB` normalization, not original high-bit-depth samples or metadata.
+- Three external-tool tests passed (`mvn -Pinterop test`): cwebp→Java and Java→dwebp for RGB, ARGB and grayscale-derived images, both lossy and lossless; and native grayscale-PNG input compared against dwebp. Paths containing spaces are included. External processes have a 30-second limit.
+- A first comparison exposed differing grayscale PNG sample-to-RGB interpretation between Java ImageIO and cwebp. Source-pixel equality therefore uses an explicit 8-bit sRGB PNG normalization. Native grayscale PNG interoperability is checked against the independent dwebp decode of the same WebP, avoiding an incorrect cross-color-space equality assertion.
+
+These are deterministic synthetic fixtures plus the original independent cwebp fixture. This is not a large real-world photographic corpus, nor ICC/EXIF preservation validation. The library intentionally does not preserve those metadata.
