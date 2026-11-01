@@ -1,6 +1,13 @@
 package io.github.shinyook.webpbridge;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
 /** In-memory static WebP encoding and decoding. Methods are safe for concurrent use. */
@@ -107,6 +114,80 @@ public final class WebP {
         image.setRGB(0, 0, w, h, pixels, 0, w);
         return image;
     }
+    /** Reads a WebP file using default input limits.
+     * @param path input file @return decoded image @throws IOException on file errors */
+    public static BufferedImage read(Path path) throws IOException { return read(path,WebPOptions.DEFAULT); }
+    /** Reads a bounded WebP file; closes its internally opened stream.
+     * @param path input file @param options resource limits @return decoded image @throws IOException on file errors */
+    public static BufferedImage read(Path path, WebPOptions options) throws IOException {
+        Objects.requireNonNull(options,"options");
+        try(InputStream in=Files.newInputStream(path)) { return read(in,options); }
+    }
+    /** Reads a caller-owned stream using default limits, leaving it open.
+     * @param input encoded stream @return decoded image @throws IOException on read errors */
+    public static BufferedImage read(InputStream input) throws IOException { return read(input,WebPOptions.DEFAULT); }
+    /** Buffers bounded encoded input, then decodes. Does not close the caller's stream.
+     * @param input encoded stream @param options resource limits @return decoded image @throws IOException on read errors */
+    public static BufferedImage read(InputStream input, WebPOptions options) throws IOException {
+        return decode(readBounded(input,options),options);
+    }
+    /** Inspects a file without decoding pixels, using default input byte limits.
+     * @param path input file @return header metadata @throws IOException on file errors */
+    public static WebPInfo inspect(Path path) throws IOException { return inspect(path,WebPOptions.DEFAULT); }
+    /** Buffers a bounded file for header inspection, closing the internally opened stream.
+     * @param path input file @param options input byte limit @return header metadata @throws IOException on file errors */
+    public static WebPInfo inspect(Path path, WebPOptions options) throws IOException {
+        Objects.requireNonNull(options,"options");
+        try(InputStream in=Files.newInputStream(path)) { return inspect(in,options); }
+    }
+    /** Inspects a caller-owned stream using default input byte limits.
+     * @param input encoded stream @return header metadata @throws IOException on read errors */
+    public static WebPInfo inspect(InputStream input) throws IOException { return inspect(input,WebPOptions.DEFAULT); }
+    /** Buffers bounded encoded input for inspection. Does not close the caller's stream.
+     * @param input encoded stream @param options input byte limit @return header metadata @throws IOException on read errors */
+    public static WebPInfo inspect(InputStream input, WebPOptions options) throws IOException {
+        return inspect(readBounded(input,options),options);
+    }
+    private static byte[] readBounded(InputStream input, WebPOptions options) throws IOException {
+        Objects.requireNonNull(input,"input"); Objects.requireNonNull(options,"options");
+        int limit=options.maxInputBytes(), count=0;
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream(Math.min(8192,limit));
+        byte[] buffer=new byte[Math.min(8192,limit)];
+        while(true) {
+            int n=input.read(buffer,0,(int)Math.min(buffer.length,(long)limit-count+1));
+            if(n<0) break;
+            if(n==0) {
+                int value=input.read();
+                if(value<0) break;
+                if(count==limit) throw new IllegalArgumentException("Encoded input exceeds byte limit");
+                bytes.write(value); count++;
+            } else {
+                if((long)count+n>limit) throw new IllegalArgumentException("Encoded input exceeds byte limit");
+                bytes.write(buffer,0,n); count+=n;
+            }
+        }
+        return bytes.toByteArray();
+    }
+    /** Encodes with defaults and writes to a caller-owned stream, without closing or flushing it.
+     * @param image source image @param output caller-owned output @throws IOException on write errors */
+    public static void write(BufferedImage image, OutputStream output) throws IOException { write(image,output,WebPOptions.DEFAULT); }
+    /** Finishes encoding before writing. I/O errors can leave partial caller output.
+     * @param image source image @param output caller-owned output @param options encoding settings @throws IOException on write errors */
+    public static void write(BufferedImage image, OutputStream output, WebPOptions options) throws IOException {
+        Objects.requireNonNull(output,"output");
+        byte[] encoded=encode(image,options); output.write(encoded);
+    }
+    /** Creates a new WebP file using defaults; existing paths are never overwritten.
+     * @param image source image @param path new destination @throws IOException on file errors or existing path */
+    public static void write(BufferedImage image, Path path) throws IOException { write(image,path,WebPOptions.DEFAULT); }
+    /** Finishes encoding before creating a new file. A partial new file may remain on I/O failure.
+     * @param image source image @param path new destination @param options encoding settings @throws IOException on file errors or existing path */
+    public static void write(BufferedImage image, Path path, WebPOptions options) throws IOException {
+        Objects.requireNonNull(path,"path");
+        byte[] encoded=encode(image,options);
+        try(OutputStream out=Files.newOutputStream(path,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) { out.write(encoded); }
+    }
+
     private static int readInt(byte[] b, int i) {
         return ((b[i] & 255) << 24) | ((b[i+1] & 255) << 16) | ((b[i+2] & 255) << 8) | (b[i+3] & 255);
     }
