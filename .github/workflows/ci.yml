@@ -48,7 +48,7 @@ jobs:
       - run: mvn --batch-mode -DskipTests install
       - run: mvn --batch-mode -f benchmarks/pom.xml package
       - run: java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webp.benchmarks.CodecBenchmark
-      - run: java -jar benchmarks/target/benchmarks.jar CodecBenchmark -p dataset=ui256 -f 1 -wi 0 -i 1 -r 100ms
+      - run: java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true -p dataset=ui256 -f 1 -wi 0 -i 1 -r 100ms
       - uses: actions/upload-artifact@v4
         if: always()
         with:

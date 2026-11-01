@@ -18,7 +18,7 @@ First build and install this project **for the machine running JMH**, following 
 mvn install
 mvn -f benchmarks/pom.xml package
 java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webp.benchmarks.CodecBenchmark
-java -jar benchmarks/target/benchmarks.jar CodecBenchmark \
+java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true \
   -prof gc -rf json -rff benchmarks/results/local.json
 ```
 
@@ -29,7 +29,7 @@ The default measurement is single-threaded average milliseconds per operation, t
 For a **smoke check only**, not publishable performance evidence:
 
 ```sh
-java -jar benchmarks/target/benchmarks.jar CodecBenchmark \
+java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true \
   -p dataset=ui256 -f 1 -wi 0 -i 1 -r 100ms
 ```
 
