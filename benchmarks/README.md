@@ -17,7 +17,7 @@ First build and install this project **for the machine running JMH**, following 
 ```sh
 mvn install
 mvn -f benchmarks/pom.xml package
-java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webp.benchmarks.CodecBenchmark
+java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webpbridge.benchmarks.CodecBenchmark
 java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true \
   -prof gc -rf json -rff benchmarks/results/local.json
 ```
@@ -55,3 +55,7 @@ Recorded results and environment are linked from the root README.
 ## Regenerate charts
 
 Install the pinned plotting dependency from `benchmarks/requirements-charts.txt` in a virtual environment, then run `python benchmarks/charts.py`. The generator reads the same committed JMH JSON used by the tables and exports PNG and SVG files under `benchmarks/results/charts/`. Charts preserve all four workloads and include uncertainty; no timing measurements are rerun. The root README embeds PNGs for broad renderer support. Run `python benchmarks/report.py` separately to regenerate tables.
+
+## Naming history
+
+The committed measurements were collected before the project was renamed from `webp-jni` to `webpbridge` and before the Java package rename. Original JMH class names and environment metadata are preserved in the raw results for provenance. README tables and chart labels use the current project name; no measured values were changed or recollected for the rename.

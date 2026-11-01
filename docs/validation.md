@@ -48,7 +48,7 @@ The platform matrix covers the architectures reported by each hosted runner; it 
 
 ## Final CI evidence
 
-[Run 41300435343](https://github.com/shinyook/webp-jni/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
+[Run 41300435343](https://github.com/shinyook/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
 
 | Hosted runtime | Java | Unit checks | Packaged-JAR checks |
 | --- | --- | --- | --- |

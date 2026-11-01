@@ -52,8 +52,8 @@ static const struct JNINativeInterface_ functions = {
     .GetArrayLength=length, .GetByteArrayElements=pin,
     .ReleaseByteArrayElements=unpin, .NewByteArray=new_array, .SetByteArrayRegion=set_region
 };
-#define ENCODE(a,w,h,q,l) Java_io_github_shinyook_webp_WebP_00024Native_encode(&env,NULL,a,w,h,q,l)
-#define DECODE(a,limit) Java_io_github_shinyook_webp_WebP_00024Native_decode(&env,NULL,a,limit)
+#define ENCODE(a,w,h,q,l) Java_io_github_shinyook_webpbridge_WebP_00024Native_encode(&env,NULL,a,w,h,q,l)
+#define DECODE(a,limit) Java_io_github_shinyook_webpbridge_WebP_00024Native_decode(&env,NULL,a,limit)
 #define REJECT(expr) do { pending_exception=0; jbyteArray rejected=(expr); assert(!rejected && pending_exception && pins==0); pending_exception=0; } while(0)
 int main(void) {
     JNIEnv env=&functions;

@@ -25,13 +25,13 @@ def cell(method, dataset, mode):
 lines = ['<!-- BEGIN BENCHMARK TABLES -->',
          'Average **ms/op ± JMH 99.9% confidence-interval half-width**; lower is better. Each cell contains 10 measured iterations across two forks.',
          '', '### Encoding', '',
-         '| Dataset | Mode | webp-jni | webp-imageio 0.11.0 |',
+         '| Dataset | Mode | webpbridge | webp-imageio 0.11.0 |',
          '| --- | --- | ---: | ---: |']
 for dataset in ['ui256', 'texture1024']:
     for mode in ['lossless', 'lossy80']:
         lines.append(f'| {dataset} | {mode} | {cell("encodeJni", dataset, mode)} | {cell("encodeImageio", dataset, mode)} |')
 lines += ['', '### Decoding', '',
-          '| Dataset | Mode | webp-jni | webp-imageio 0.11.0 | TwelveMonkeys 3.15.3 |',
+          '| Dataset | Mode | webpbridge | webp-imageio 0.11.0 | TwelveMonkeys 3.15.3 |',
           '| --- | --- | ---: | ---: | ---: |']
 for dataset in ['ui256', 'texture1024']:
     for mode in ['lossless', 'lossy80']:
@@ -47,7 +47,7 @@ for dataset in ['ui256', 'texture1024']:
         lines.append(f'| {dataset} | {mode} | ' + ' | '.join(f'{v:.1f}' for v in values) + ' |')
 lines += ['', '### Encoded output sizes', '',
           'Both native encoders produced byte-identical output for every fixture in this run; [SHA-256 checksums](benchmarks/results/output-sizes.csv) are retained.', '',
-          '| Dataset | Mode | webp-jni bytes | webp-imageio bytes |',
+          '| Dataset | Mode | webpbridge bytes | webp-imageio bytes |',
           '| --- | --- | ---: | ---: |']
 with (root / 'results/output-sizes.csv').open() as stream:
     for row in csv.DictReader(stream):

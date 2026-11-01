@@ -13,7 +13,7 @@ static void fail(JNIEnv *env, const char *type, const char *message) {
 #define INVALID(msg) fail(env, "java/lang/IllegalArgumentException", msg)
 #define FAILED(msg) fail(env, "java/lang/IllegalStateException", msg)
 
-JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webp_WebP_00024Native_encode
+JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_encode
 (JNIEnv *env, jclass cls, jbyteArray input, jint w, jint h, jfloat quality, jboolean lossless) {
     (void)cls;
     if (!input || w <= 0 || h <= 0 || w > 16383 || h > 16383 ||
@@ -49,7 +49,7 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webp_WebP_00024Native_encod
     return result;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webp_WebP_00024Native_decode
+JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_decode
 (JNIEnv *env, jclass cls, jbyteArray input, jint max_pixels) {
     (void)cls;
     if (!input || max_pixels <= 0) { INVALID("Invalid input or pixel limit"); return NULL; }

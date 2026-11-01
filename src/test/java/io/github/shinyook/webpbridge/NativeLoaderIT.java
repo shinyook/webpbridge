@@ -1,4 +1,4 @@
-package io.github.shinyook.webp;
+package io.github.shinyook.webpbridge;
 
 import java.nio.file.*;
 import java.util.*;
@@ -11,11 +11,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @Timeout(value=90, threadMode=Timeout.ThreadMode.SEPARATE_THREAD)
 class NativeLoaderIT {
     @TempDir Path temp;
-    private final Path jar=Path.of("target/webp-jni-0.1.0-SNAPSHOT.jar").toAbsolutePath();
+    private final Path jar=Path.of("target/webpbridge-0.1.0-SNAPSHOT.jar").toAbsolutePath();
     private Path source() throws Exception {
         Path source=temp.resolve("Probe.java");
         Files.writeString(source,"""
-            import io.github.shinyook.webp.WebP;
+            import io.github.shinyook.webpbridge.WebP;
             import java.awt.image.BufferedImage;
             class Probe {
                 public static void main(String[] args) {

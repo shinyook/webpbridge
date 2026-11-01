@@ -1,4 +1,4 @@
-package io.github.shinyook.webp;
+package io.github.shinyook.webpbridge;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,7 @@ final class NativeLoader {
         String resource = "/native/" + os + "-" + arch + "/" + filename;
         try (InputStream in = NativeLoader.class.getResourceAsStream(resource)) {
             if (in == null) throw new UnsatisfiedLinkError("Missing " + resource + "; build for this platform or set -Dwebp.jni.path=/absolute/path/to/" + filename);
-            Path dir = Files.createTempDirectory("webp-jni-");
+            Path dir = Files.createTempDirectory("webpbridge-");
             dir.toFile().deleteOnExit();
             Path library = dir.resolve(filename);
             library.toFile().deleteOnExit();

@@ -1,4 +1,4 @@
-package io.github.shinyook.webp;
+package io.github.shinyook.webpbridge;
 
 import java.awt.image.BufferedImage;
 import java.util.Arrays;

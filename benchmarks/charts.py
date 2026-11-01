@@ -16,9 +16,9 @@ out = root / 'results/charts'
 out.mkdir(exist_ok=True)
 colors = ['#2563eb', '#d97706', '#64748b']
 plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 11, 'axes.spines.top': False,
-                     'axes.spines.right': False, 'axes.spines.left': False, 'svg.hashsalt': 'webp-jni'})
+                     'axes.spines.right': False, 'axes.spines.left': False, 'svg.hashsalt': 'webpbridge'})
 for operation in ['encode', 'decode']:
-    methods = [(operation+'Jni', 'webp-jni'), (operation+'Imageio', 'webp-imageio')]
+    methods = [(operation+'Jni', 'webpbridge'), (operation+'Imageio', 'webp-imageio')]
     if operation == 'decode': methods.append(('decodeTwelveMonkeys', 'TwelveMonkeys'))
     for allocation in [False, True]:
         fig, axes = plt.subplots(2, 2, figsize=(12, 7.7))
@@ -56,5 +56,7 @@ for operation in ['encode', 'decode']:
         name=operation+('-allocation' if allocation else '-time')
         fig.savefig(out/(name+'.png'),dpi=160,facecolor='white')
         fig.savefig(out/(name+'.svg'),facecolor='white',metadata={'Date':None})
+        svg=out/(name+'.svg')
+        svg.write_text('\n'.join(line.rstrip() for line in svg.read_text().splitlines())+'\n')
         plt.close(fig)
 print('Generated four PNG/SVG charts from all 20 benchmark cases.')

@@ -1,9 +1,9 @@
-# webp-jni
+# webpbridge
 
 A small Java 17+ library for in-memory static WebP encoding and decoding using JNI and Google's libwebp. No external conversion process is spawned.
 
 ```java
-import io.github.shinyook.webp.WebP;
+import io.github.shinyook.webpbridge.WebP;
 
 byte[] compressed = WebP.encode(image, 80f);
 byte[] lossless = WebP.encodeLossless(image);
@@ -35,12 +35,14 @@ Lower bars mean less time or fewer Java heap allocations per operation. Whiskers
 
 </details>
 
+The recorded measurements predate the `webp-jni` → `webpbridge` rename. Display labels use the current name; raw results retain the original names and unchanged measured values.
+
 <!-- BEGIN BENCHMARK TABLES -->
 Average **ms/op ± JMH 99.9% confidence-interval half-width**; lower is better. Each cell contains 10 measured iterations across two forks.
 
 ### Encoding
 
-| Dataset | Mode | webp-jni | webp-imageio 0.11.0 |
+| Dataset | Mode | webpbridge | webp-imageio 0.11.0 |
 | --- | --- | ---: | ---: |
 | ui256 | lossless | 18.601 ± 5.336 | 15.980 ± 2.920 |
 | ui256 | lossy80 | 2.107 ± 0.043 | 2.354 ± 0.676 |
@@ -49,7 +51,7 @@ Average **ms/op ± JMH 99.9% confidence-interval half-width**; lower is better. 
 
 ### Decoding
 
-| Dataset | Mode | webp-jni | webp-imageio 0.11.0 | TwelveMonkeys 3.15.3 |
+| Dataset | Mode | webpbridge | webp-imageio 0.11.0 | TwelveMonkeys 3.15.3 |
 | --- | --- | ---: | ---: | ---: |
 | ui256 | lossless | 0.726 ± 0.062 | 0.309 ± 0.048 | 2.399 ± 0.290 |
 | ui256 | lossy80 | 0.633 ± 0.067 | 0.184 ± 0.005 | 2.797 ± 0.604 |
@@ -71,7 +73,7 @@ Measured **KiB/op** (`gc.alloc.rate.norm` / 1024). These are Java allocations, *
 
 Both native encoders produced byte-identical output for every fixture in this run; [SHA-256 checksums](benchmarks/results/output-sizes.csv) are retained.
 
-| Dataset | Mode | webp-jni bytes | webp-imageio bytes |
+| Dataset | Mode | webpbridge bytes | webp-imageio bytes |
 | --- | --- | ---: | ---: |
 | ui256 | lossless | 134 | 134 |
 | ui256 | lossy80 | 1,536 | 1,536 |
@@ -96,12 +98,12 @@ cmake --install build --config Release --prefix target/classes --component webpj
 mvn verify
 ```
 
-The resulting `target/webp-jni-0.1.0-SNAPSHOT.jar` contains the native library for **the build machine's OS/CPU only** and libwebp license notices. Run `mvn install` to use that local artifact from another Maven project:
+The resulting `target/webpbridge-0.1.0-SNAPSHOT.jar` contains the native library for **the build machine's OS/CPU only** and libwebp license notices. Run `mvn install` to use that local artifact from another Maven project:
 
 ```xml
 <dependency>
   <groupId>io.github.shinyook</groupId>
-  <artifactId>webp-jni</artifactId>
+  <artifactId>webpbridge</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -113,7 +115,7 @@ This artifact is not yet published to Maven Central. CI builds and tests Linux, 
 After building, convert a PNG or JPEG to lossless WebP:
 
 ```sh
-java -cp target/webp-jni-0.1.0-SNAPSHOT.jar examples/Convert.java input.png output.webp
+java -cp target/webpbridge-0.1.0-SNAPSHOT.jar examples/Convert.java input.png output.webp
 ```
 
 ## Native loading

@@ -24,9 +24,9 @@ jobs:
       - run: mvn --batch-mode verify
       - uses: actions/upload-artifact@v4
         with:
-          name: webp-jni-${{ matrix.os }}-java${{ matrix.java }}
+          name: webpbridge-${{ matrix.os }}-java${{ matrix.java }}
           path: |
-            target/webp-jni-*.jar
+            target/webpbridge-*.jar
             target/surefire-reports/
             target/failsafe-reports/
   stress:
@@ -47,7 +47,7 @@ jobs:
       - run: mvn --batch-mode -Pinterop test
       - run: mvn --batch-mode -DskipTests install
       - run: mvn --batch-mode -f benchmarks/pom.xml package
-      - run: java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webp.benchmarks.CodecBenchmark
+      - run: java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webpbridge.benchmarks.CodecBenchmark
       - run: java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true -p dataset=ui256 -f 1 -wi 0 -i 1 -r 100ms
       - uses: actions/upload-artifact@v4
         if: always()

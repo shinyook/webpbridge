@@ -1,6 +1,6 @@
-package io.github.shinyook.webp.benchmarks;
+package io.github.shinyook.webpbridge.benchmarks;
 
-import io.github.shinyook.webp.WebP;
+import io.github.shinyook.webpbridge.WebP;
 import com.luciad.imageio.webp.WebPWriteParam;
 import java.awt.image.BufferedImage;
 import java.io.*;
