@@ -76,3 +76,5 @@ ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ctest 
 ```
 
 Use Linux for leak detection. Apple ASan requires `detect_leaks=0`; that run checks memory access and undefined behavior but does not establish leak freedom. The standalone adapter does not model the entire JVM or force failures inside every libwebp allocation. The real-JVM soak validates integration but is not itself a native leak detector. See [validation results](docs/validation.md).
+
+The default suite includes deterministic malformed-input and dimension-boundary checks; `mvn -Dtest=MalformedInputTest test` runs them separately. A mutation may remain a valid image: the check requires a bounded valid result or the documented input exception, rather than requiring every mutation to fail. This is not coverage-guided fuzzing.

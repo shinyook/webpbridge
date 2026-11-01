@@ -25,3 +25,7 @@ Local macOS ARM64 / JDK 25.0.3 results:
 - Apple run disables leak detection because it is unsupported by Apple ASan. Linux CI enables `detect_leaks=1` without JVM suppressions; its result must pass before issue #2 is closed.
 
 The native adapter models only the JNI operations the bridge uses, rather than executing a JVM. The real JVM test is complementary. This is bounded regression validation, not an indefinite endurance test or a proof of absence of all possible leaks.
+
+## #3 Malformed inputs and boundaries (2026-11-01)
+
+`mvn -Dtest=MalformedInputTest test` passed three tests on local macOS ARM64 / JDK 25.0.3. The deterministic corpus contains 11,238 decodes: all truncated prefixes of independently encoded lossy/lossless random images, seeded mutations, RIFF/chunk corruption, and random byte arrays. Successful mutated images are allowed if within the 4,096-pixel limit; other cases must produce `IllegalArgumentException`. Unexpected exceptions fail the test. Additional tests cover oversized VP8X headers, width 1/16383/16384, height 16384 rejection, quality 0/100, and invalid decode limits. Runtime was 0.456 s. The native sanitizer adapter also adds 1,000 truncated/mutated inputs. Fixed-seed mutation is regression coverage, not continuous coverage-guided fuzzing. The external CI job timeout bounds a stuck native call.

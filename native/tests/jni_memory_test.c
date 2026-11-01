@@ -84,6 +84,26 @@ int main(void) {
             dispose(encoded);
         }
     }
+    jbyteArray seed=ENCODE((jbyteArray)source,64,64,80,1);
+    assert(seed && !pending_exception);
+    uint32_t state=20261101;
+    for(int i=0;i<1000;i++) {
+        Array *original=(Array *)seed;
+        jsize n=(i<500) ? (jsize)((uint32_t)i%(uint32_t)original->length) : original->length;
+        Array *mutated=array(n);
+        memcpy(mutated->bytes,original->bytes,(size_t)n);
+        if(i>=500) {
+            state=state*1664525u+1013904223u;
+            mutated->bytes[state%(uint32_t)n]^=(jbyte)(1u<<(state%8));
+        }
+        jbyteArray output=DECODE((jbyteArray)mutated,4096);
+        assert(pins==0);
+        if(output) { assert(!pending_exception); dispose(output); }
+        else assert(pending_exception);
+        pending_exception=0;
+        dispose((jbyteArray)mutated);
+    }
+    dispose(seed);
     REJECT(ENCODE((jbyteArray)source,0,64,80,0));
     REJECT(ENCODE((jbyteArray)source,16384,64,80,0));
     REJECT(ENCODE((jbyteArray)source,64,64,NAN,0));
@@ -91,6 +111,6 @@ int main(void) {
     REJECT(DECODE(NULL,4096));
     dispose((jbyteArray)source);
     assert(pins==0 && !pending_exception);
-    puts("PASS: 2000 codec cycles, failure paths, simulated JNI allocation/pin failures; no outstanding pins");
+    puts("PASS: 2000 codec cycles, 1000 malformed cases, allocation/pin failure paths; no outstanding pins");
     return 0;
 }
