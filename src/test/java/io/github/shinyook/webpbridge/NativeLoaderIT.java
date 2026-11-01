@@ -96,4 +96,23 @@ class NativeLoaderIT {
         assertTrue(output.contains("UnsatisfiedLinkError"),output);
         assertTrue(output.contains("does-not-exist"),output);
     }
+    private static List<Path> extractionDirs(Path scratch) throws Exception {
+        try(var entries=Files.newDirectoryStream(scratch,"webpbridge-*")) { var list=new ArrayList<Path>(); entries.forEach(list::add); return list; }
+    }
+    @Test void laterProcessRemovesStaleExtractionDirectories() throws Exception {
+        Path scratch=Files.createDirectories(temp.resolve("temporary directory with spaces"));
+        var old=java.nio.file.attribute.FileTime.from(java.time.Instant.now().minus(java.time.Duration.ofHours(2)));
+        Path planted=Files.createDirectory(scratch.resolve("webpbridge-planted"));
+        Files.write(planted.resolve(System.mapLibraryName("webpjni")),new byte[]{1,2,3});
+        Files.createFile(planted.resolve(".lock"));
+        Files.setLastModifiedTime(planted,old);
+        run(jar,true);
+        assertFalse(Files.exists(planted),"stale directory from an exited process was not removed");
+        // Windows cannot delete the loaded DLL at exit, so the first run's directory usually remains here.
+        var leftovers=extractionDirs(scratch);
+        for(Path dir:leftovers) Files.setLastModifiedTime(dir,old);
+        run(jar,true);
+        for(Path dir:leftovers) assertFalse(Files.exists(dir),"leftover from previous JVM not removed: "+dir);
+        System.out.println("STALE_CLEANUP os="+System.getProperty("os.name")+" leftovers-after-exit="+leftovers.size()+" after-second-run="+extractionDirs(scratch).size());
+    }
 }
