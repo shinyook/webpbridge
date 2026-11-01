@@ -107,3 +107,9 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
     if (result) (*env)->SetByteArrayRegion(env,result,0,12,(const jbyte *)header);
     return result;
 }
+
+JNIEXPORT jlong JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_versions
+(JNIEnv *env, jclass cls) {
+    (void)env; (void)cls;
+    return ((jlong)(uint32_t)WebPGetEncoderVersion()<<32) | (jlong)(uint32_t)WebPGetDecoderVersion();
+}

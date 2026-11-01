@@ -1,6 +1,6 @@
 # webpbridge
 
-A small Java 17+ library for in-memory static WebP encoding and decoding using JNI and Google's libwebp. No external conversion process is spawned.
+A Java 17+ WebP API for server-side image workflows: explicit resource limits, header inspection, predictable file/stream ownership, and native runtime diagnostics. Encoding and decoding use Google's libwebp through JNI, without an external conversion process.
 
 ```java
 import io.github.shinyook.webpbridge.WebP;
@@ -11,6 +11,67 @@ BufferedImage restored = WebP.decode(compressed);
 // Optional limit checked before allocating native decoded pixels:
 BufferedImage limited = WebP.decode(compressed, 4_000_000);
 ```
+
+## Server-side API
+
+```java
+import io.github.shinyook.webpbridge.WebP;
+import io.github.shinyook.webpbridge.WebPInfo;
+import io.github.shinyook.webpbridge.WebPOptions;
+
+WebPOptions options = WebPOptions.builder()
+    .quality(80)
+    .maxPixels(4_000_000)
+    .maxInputBytes(8 * 1024 * 1024)
+    .build();
+
+WebPInfo info = WebP.inspect(uploadBytes, options);
+if (info.animated() || info.pixelCount() > options.maxPixels()) {
+    throw new IllegalArgumentException("Unsupported upload dimensions or animation");
+}
+BufferedImage image = WebP.decode(uploadBytes, options);
+byte[] compressed = WebP.encode(image, options);
+```
+
+`inspect` reports width, height, alpha, animation and compression format from the container header without decoding a pixel buffer. It still receives/buffers the encoded input and does **not** establish that the complete pixel bitstream is valid. Animated headers can be inspected, but animation decoding remains unsupported. Inspection applies the byte limit, not the pixel limit, so applications can examine dimensions before choosing whether to decode.
+
+### Options and limits
+
+`WebPOptions` is immutable and shareable; builders create independent snapshots. Defaults are quality 80, lossy encoding, 16 million pixels and 64 MiB encoded input. Quality controls lossy quality or lossless compression effort; set `.lossless(true)` for exact lossless output, including RGB under fully transparent pixels.
+
+- `encode(image, options)` checks source pixels before allocating RGBA copies.
+- `decode(bytes, options)` checks encoded bytes and decoded pixels.
+- `read` and `inspect` bound input bytes as they read, including streams with unknown length. Oversize input is rejected with `IllegalArgumentException`; determining excess can consume one byte beyond the configured limit.
+- These limits are **not a total-memory budget**. Java/native copies and temporary allocations are additional. I/O and native calls have no timeout, forced cancellation, or streaming-pixel guarantee.
+- Existing `encode(image, quality)`, `encodeLossless(image)` and `decode(bytes[, maxPixels])` retain their prior behavior. Legacy encoders do not gain the new option-based source-pixel limit; legacy decoders do not gain an encoded-byte limit. Use the option overloads for bounded service inputs.
+
+### Files and caller-owned streams
+
+```java
+BufferedImage image = WebP.read(inputPath, options);
+WebP.write(image, newOutputPath, options); // CREATE_NEW; does not overwrite
+WebPInfo info = WebP.inspect(inputPath, options);
+
+BufferedImage uploaded = WebP.read(inputStream, options);
+WebP.write(uploaded, outputStream, options);
+```
+
+Path operations open/close their own streams. Caller-provided streams are **never closed or automatically flushed**; the caller owns their lifetime. All encoded input/output is buffered in memory. Encoding finishes before any output is touched. Validation/encoding failures therefore leave output untouched, while an I/O failure can leave partial stream data or a partial newly created file. Existing destination files are never overwritten. Filesystem/stream errors remain `IOException`; input/limit errors remain `IllegalArgumentException`.
+
+### Startup diagnostics
+
+```java
+var runtime = WebP.runtimeInfo();
+if (!runtime.available()) {
+    throw new IllegalStateException(runtime.failureReason());
+}
+System.out.println(runtime.platform());
+System.out.println(runtime.bundledPlatforms());
+System.out.println(runtime.encoderVersion());
+System.out.println(runtime.decoderVersion());
+```
+
+The first call attempts native loading and returns a cached immutable diagnostic snapshot, including load failures. Versions come from the loaded native codec; bundled platforms describe resources actually present in the JAR, not a blanket support claim. Set `webp.jni.path` before any native use. Failed native class initialization requires a fresh class loader or JVM; diagnostics do not retry or repair loading. Operationally, this supports startup checks without exposing `UnsatisfiedLinkError` from the diagnostic query itself.
 
 ## Benchmarks
 
@@ -156,4 +217,4 @@ The default suite includes deterministic malformed-input and dimension-boundary 
 
 `mvn -Pinterop test` requires `cwebp` and `dwebp` on PATH (for example, the `webp` package on Ubuntu). It verifies both directions with independent CLI tools. Grayscale PNG readers can differ in sample-to-sRGB interpretation: pixel equality against a source image uses explicit 8-bit sRGB normalization, while native grayscale input is compared against an independent decode of the same WebP. The default suite also covers 11 Java image types and subimages.
 
-`mvn verify` additionally runs four packaged-JAR integration tests in fresh JVMs: bundled native loading, explicit path loading, missing native resource diagnostics, and invalid explicit path failure. It exercises paths containing spaces and checks the classes came from the built JAR. CI uploads test reports alongside each platform artifact. The runner's actual OS/architecture is printed in the integration-test report; the matrix is not a claim that every OS/architecture or libc combination is supported.
+`mvn verify` additionally runs five packaged-JAR integration tests in fresh JVMs: bundled native loading, explicit path loading, missing native resource diagnostics, invalid explicit path failure, and repeated unavailable-runtime diagnostics. It exercises paths containing spaces and checks the classes came from the built JAR. CI uploads test reports alongside each platform artifact. The runner's actual OS/architecture is printed in the integration-test report; the matrix is not a claim that every OS/architecture or libc combination is supported.

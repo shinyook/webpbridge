@@ -21,6 +21,12 @@ class NativeLoaderIT {
                 public static void main(String[] args) {
                     String origin=WebP.class.getProtectionDomain().getCodeSource().getLocation().toString();
                     if (!origin.endsWith(".jar")) throw new AssertionError("Not loaded from JAR: "+origin);
+                    if(Boolean.getBoolean("probe.diagnostics")) {
+                        var first=WebP.runtimeInfo(); var second=WebP.runtimeInfo();
+                        if(first!=second || first.available() || first.failureReason()==null) throw new AssertionError("Bad repeated diagnostics");
+                        System.out.println("PACKAGED_JAR_OK unavailable diagnostics: "+first.failureReason());
+                        return;
+                    }
                     var image=new BufferedImage(2,1,BufferedImage.TYPE_INT_ARGB);
                     image.setRGB(0,0,0x00123456); image.setRGB(1,0,0x80112233);
                     var output=WebP.decode(WebP.encodeLossless(image));
@@ -79,6 +85,11 @@ class NativeLoaderIT {
         assertTrue(output.contains("UnsatisfiedLinkError"),output);
         assertTrue(output.contains("Missing /native/"),output);
         assertTrue(output.contains("webp.jni.path"),output);
+    }
+    @Test void unavailableDiagnosticsAreStableInFreshJvm() throws Exception {
+        String output=run(jar,true,"-Dwebp.jni.path="+temp.resolve("missing-native"),"-Dprobe.diagnostics=true");
+        assertTrue(output.contains("unavailable diagnostics"),output);
+        assertTrue(output.contains("missing-native"),output);
     }
     @Test void invalidExplicitPathFailsInFreshJvm() throws Exception {
         String output=run(jar,false,"-Dwebp.jni.path="+temp.resolve("does-not-exist"));

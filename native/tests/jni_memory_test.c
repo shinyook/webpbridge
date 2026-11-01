@@ -108,6 +108,11 @@ int main(void) {
         if(output) { assert(!pending_exception); dispose(output); }
         else assert(pending_exception);
         pending_exception=0;
+        output=INSPECT((jbyteArray)mutated);
+        assert(pins==0);
+        if(output) { assert(!pending_exception); dispose(output); }
+        else assert(pending_exception);
+        pending_exception=0;
         dispose((jbyteArray)mutated);
     }
     dispose(seed);

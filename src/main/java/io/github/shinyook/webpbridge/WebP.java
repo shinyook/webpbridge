@@ -18,6 +18,31 @@ public final class WebP {
         static native byte[] encode(byte[] rgba, int width, int height, float quality, boolean lossless);
         static native byte[] decode(byte[] data, int maxPixels);
         static native byte[] inspect(byte[] data);
+        static native long versions();
+    }
+
+    private static final class Diagnostics {
+        static final WebPRuntimeInfo INFO=diagnose();
+    }
+    /** Attempts native initialization and caches a diagnostic snapshot, including load failures.
+     * Set webp.jni.path before any native use. Failed initialization requires a fresh class loader/JVM.
+     * @return availability, actual versions and bundled resources; load errors are reported as data
+     */
+    public static WebPRuntimeInfo runtimeInfo() { return Diagnostics.INFO; }
+    private static WebPRuntimeInfo diagnose() {
+        String platform=NativeLoader.platform();
+        var bundled=NativeLoader.bundledPlatforms();
+        try {
+            long versions=Native.versions();
+            return new WebPRuntimeInfo(platform,bundled,true,version((int)(versions>>>32)),version((int)versions),null);
+        } catch(LinkageError error) {
+            Throwable cause=error;
+            while(cause.getCause()!=null && cause.getCause()!=cause) cause=cause.getCause();
+            return new WebPRuntimeInfo(platform,bundled,false,null,null,cause.toString());
+        }
+    }
+    private static String version(int packed) {
+        return ((packed>>>16)&255)+"."+((packed>>>8)&255)+"."+(packed&255);
     }
 
     /** Encodes with lossy RGB compression and lossless alpha, quality in [0, 100]. */
