@@ -2,14 +2,27 @@
   <modelVersion>4.0.0</modelVersion><groupId>io.github.shinyook</groupId><artifactId>webpbridge</artifactId><version>0.1.0-SNAPSHOT</version>
   <name>webpbridge</name><description>Small Java JNI binding for libwebp</description><url>https://github.com/shinyook/webpbridge</url>
   <licenses><license><name>MIT License</name><url>https://opensource.org/license/mit</url></license></licenses>
-  <properties><maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><test.groups></test.groups><test.excludedGroups>stress,interop</test.excludedGroups><test.jvmArgs>-Xcheck:jni</test.jvmArgs></properties>
+  <developers><developer><id>shinyook</id><name>Shinyook Lee</name><url>https://github.com/shinyook</url></developer></developers>
+  <scm><connection>scm:git:https://github.com/shinyook/webpbridge.git</connection><developerConnection>scm:git:ssh://git@github.com/shinyook/webpbridge.git</developerConnection><url>https://github.com/shinyook/webpbridge</url><tag>HEAD</tag></scm>
+  <properties><webpbridge.test.jar>${project.build.directory}/${project.build.finalName}.jar</webpbridge.test.jar><maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><test.groups></test.groups><test.excludedGroups>stress,interop</test.excludedGroups><test.jvmArgs>-Xcheck:jni</test.jvmArgs></properties>
   <dependencies><dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.12.2</version><scope>test</scope></dependency></dependencies>
-  <build><plugins>
+  <build>
+    <resources><resource><directory>src/main/resources</directory></resource><resource><directory>${project.basedir}</directory><includes><include>LICENSE</include></includes><targetPath>META-INF</targetPath></resource></resources>
+    <plugins>
+    <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.0</version></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.3</version><configuration><argLine>${test.jvmArgs}</argLine><groups>${test.groups}</groups><excludedGroups>${test.excludedGroups}</excludedGroups></configuration></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-failsafe-plugin</artifactId><version>3.5.3</version>
+      <configuration><systemPropertyVariables><webpbridge.test.jar>${webpbridge.test.jar}</webpbridge.test.jar></systemPropertyVariables></configuration>
       <executions><execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
     </plugin>
   </plugins></build>
-  <profiles><profile><id>stress</id><properties><test.groups>stress</test.groups><test.excludedGroups></test.excludedGroups><test.jvmArgs>-Xcheck:jni -Xmx2g</test.jvmArgs></properties></profile><profile><id>interop</id><properties><test.groups>interop</test.groups><test.excludedGroups>stress</test.excludedGroups></properties></profile></profiles>
+  <profiles><profile><id>stress</id><properties><test.groups>stress</test.groups><test.excludedGroups></test.excludedGroups><test.jvmArgs>-Xcheck:jni -Xmx2g</test.jvmArgs></properties></profile><profile><id>interop</id><properties><test.groups>interop</test.groups><test.excludedGroups>stress</test.excludedGroups></properties></profile>
+    <profile><id>release</id><build><plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-source-plugin</artifactId><version>3.3.1</version><executions><execution><id>sources</id><goals><goal>jar-no-fork</goal></goals></execution></executions></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-javadoc-plugin</artifactId><version>3.11.2</version><configuration><failOnError>true</failOnError></configuration><executions><execution><id>javadoc</id><goals><goal>jar</goal></goals></execution></executions></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-gpg-plugin</artifactId><version>3.2.8</version><configuration><bestPractices>true</bestPractices><gpgArguments><arg>--pinentry-mode</arg><arg>loopback</arg></gpgArguments></configuration><executions><execution><id>sign</id><phase>verify</phase><goals><goal>sign</goal></goals></execution></executions></plugin>
+    </plugins></build></profile>
+    <profile><id>central</id><build><plugins><plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.12.0</version><extensions>true</extensions><configuration><publishingServerId>central</publishingServerId><autoPublish>true</autoPublish><waitUntil>published</waitUntil></configuration></plugin></plugins></build></profile>
+  </profiles>
 </project>

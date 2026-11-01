@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Timeout(value=90, threadMode=Timeout.ThreadMode.SEPARATE_THREAD)
 class NativeLoaderIT {
     @TempDir Path temp;
-    private final Path jar=Path.of("target/webpbridge-0.1.0-SNAPSHOT.jar").toAbsolutePath();
+    private final Path jar=Path.of(System.getProperty("webpbridge.test.jar", "target/webpbridge-0.1.0-SNAPSHOT.jar")).toAbsolutePath();
     private Path source() throws Exception {
         Path source=temp.resolve("Probe.java");
         Files.writeString(source,"""
@@ -52,8 +52,13 @@ class NativeLoaderIT {
     }
     @Test void explicitNativePathLoadsInFreshJvm() throws Exception {
         try(var archive=new JarFile(jar.toFile())) {
-            var entries=archive.stream().filter(e->e.getName().startsWith("native/")&&!e.isDirectory()).toList();
-            assertEquals(1,entries.size(),"Expected one native library for build platform");
+            String os=System.getProperty("os.name").toLowerCase(Locale.ROOT);
+            String platform=os.startsWith("windows")?"windows":os.contains("mac")?"macos":"linux";
+            String arch=System.getProperty("os.arch").toLowerCase(Locale.ROOT);
+            arch=(arch.equals("arm64")||arch.equals("aarch64"))?"aarch64":"x86_64";
+            String resource="native/"+platform+"-"+arch+"/"+System.mapLibraryName("webpjni");
+            var entries=archive.stream().filter(e->e.getName().equals(resource)).toList();
+            assertEquals(1,entries.size(),"Expected exactly one native library for the running platform");
             var entry=entries.get(0);
             Path nativeFile=Files.createDirectories(temp.resolve("explicit native with spaces")).resolve(Path.of(entry.getName()).getFileName());
             try(var in=archive.getInputStream(entry)) { Files.copy(in,nativeFile); }

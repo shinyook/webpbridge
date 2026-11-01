@@ -8,3 +8,7 @@
 /build-*/
 
 /benchmarks/target/
+
+__pycache__/
+/native-input/
+/candidate/

@@ -108,7 +108,7 @@ The resulting `target/webpbridge-0.1.0-SNAPSHOT.jar` contains the native library
 </dependency>
 ```
 
-This artifact is not yet published to Maven Central. CI builds and tests Linux, Windows and macOS with Java 17 and 25, uploading separate platform JARs. Cross-platform fat-JAR distribution is not implemented yet. `mvn clean` removes the installed native resource: repeat the CMake install step afterward.
+This artifact is not yet published to Maven Central. Development CI uploads separate platform JARs. The release workflow builds one multi-platform JAR containing Linux x86-64, Windows x86-64 and macOS ARM64 natives, and validates that same JAR on all three systems with Java 17 and 25. See [release instructions and prerequisites](docs/releasing.md); a successful unsigned candidate build does not mean the artifact has been published. `mvn clean` removes the installed native resource: repeat the CMake install step afterward.
 
 ## Example
 
