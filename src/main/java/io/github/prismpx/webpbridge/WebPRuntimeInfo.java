@@ -1,4 +1,4 @@
-package io.github.shinyook.webpbridge;
+package io.github.prismpx.webpbridge;
 
 import java.util.List;
 import java.util.Objects;

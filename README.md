@@ -3,7 +3,7 @@
 A Java 17+ WebP API for server-side image workflows: explicit resource limits, header inspection, predictable file/stream ownership, and native runtime diagnostics. Encoding and decoding use Google's libwebp through JNI, without an external conversion process.
 
 ```java
-import io.github.shinyook.webpbridge.WebP;
+import io.github.prismpx.webpbridge.WebP;
 
 byte[] compressed = WebP.encode(image, 80f);
 byte[] lossless = WebP.encodeLossless(image);
@@ -15,9 +15,9 @@ BufferedImage limited = WebP.decode(compressed, 4_000_000);
 ## Server-side API
 
 ```java
-import io.github.shinyook.webpbridge.WebP;
-import io.github.shinyook.webpbridge.WebPInfo;
-import io.github.shinyook.webpbridge.WebPOptions;
+import io.github.prismpx.webpbridge.WebP;
+import io.github.prismpx.webpbridge.WebPInfo;
+import io.github.prismpx.webpbridge.WebPOptions;
 
 WebPOptions options = WebPOptions.builder()
     .quality(80)
@@ -79,7 +79,7 @@ The first call attempts native loading and returns a cached immutable diagnostic
 
 Measured on **Apple M1 (ARM64), macOS 26.4.1, Azul OpenJDK 25.0.3**, on 2026-11-01, using JMH 1.37. Compared against [webp-imageio 0.11.0](https://github.com/usefulness/webp-imageio) and [TwelveMonkeys 3.15.3](https://github.com/haraldk/TwelveMonkeys). TwelveMonkeys supports WebP decoding only. Both native implementations used libwebp 1.6.0; the competitor's version was queried from its bundled native binary.
 
-Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout. These results predate the copy-free pixel path in [#12](https://github.com/shinyook/webpbridge/issues/12), which removed about two thirds of webpbridge's Java heap allocation per decode; the charts have not been regenerated yet.
+Two synthetic opaque fixtures: a 256×256 UI-like grid (`ui256`) and 1024×1024 seeded uniform random RGB (`texture1024`, **not a photograph**). Encoding matches quality/effort (lossless 75 or lossy 80), method 4, exact RGB, no encoder threading and no sharp YUV. Decoders receive identical WebP bytes. Timing covers full in-memory API calls, including conversion/copies and ImageIO object/stream creation and disposal; initialization and disk I/O are excluded. Decode outputs retain each API's raster layout. These results predate the copy-free pixel path in [#12](https://github.com/prismpx/webpbridge/issues/12), which removed about two thirds of webpbridge's Java heap allocation per decode; the charts have not been regenerated yet.
 
 ### Performance at a glance
 
@@ -165,7 +165,7 @@ The resulting `target/webpbridge-0.1.0-SNAPSHOT.jar` contains the native library
 
 ```xml
 <dependency>
-  <groupId>io.github.shinyook</groupId>
+  <groupId>io.github.prismpx</groupId>
   <artifactId>webpbridge</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>

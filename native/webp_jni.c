@@ -13,7 +13,7 @@ static void fail(JNIEnv *env, const char *type, const char *message) {
 #define INVALID(msg) fail(env, "java/lang/IllegalArgumentException", msg)
 #define FAILED(msg) fail(env, "java/lang/IllegalStateException", msg)
 
-JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_encode
+JNIEXPORT jbyteArray JNICALL Java_io_github_prismpx_webpbridge_WebP_00024Native_encode
 (JNIEnv *env, jclass cls, jintArray input, jint w, jint h, jboolean opaque, jfloat quality, jboolean lossless) {
     (void)cls;
     if (!input || w <= 0 || h <= 0 || w > 16383 || h > 16383 ||
@@ -54,7 +54,7 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
 
 static int little_endian(void) { const uint16_t probe = 1; return *(const uint8_t *)&probe == 1; }
 
-JNIEXPORT jintArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_decode
+JNIEXPORT jintArray JNICALL Java_io_github_prismpx_webpbridge_WebP_00024Native_decode
 (JNIEnv *env, jclass cls, jbyteArray input, jint max_pixels, jintArray info) {
     (void)cls;
     if (!input || !info || max_pixels <= 0 || (*env)->GetArrayLength(env, info) < 3) {
@@ -93,7 +93,7 @@ JNIEXPORT jintArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_
     return result;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_inspect
+JNIEXPORT jbyteArray JNICALL Java_io_github_prismpx_webpbridge_WebP_00024Native_inspect
 (JNIEnv *env, jclass cls, jbyteArray input) {
     (void)cls;
     if (!input) { INVALID("Input must not be null"); return NULL; }
@@ -130,7 +130,7 @@ JNIEXPORT jbyteArray JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native
     return result;
 }
 
-JNIEXPORT jlong JNICALL Java_io_github_shinyook_webpbridge_WebP_00024Native_versions
+JNIEXPORT jlong JNICALL Java_io_github_prismpx_webpbridge_WebP_00024Native_versions
 (JNIEnv *env, jclass cls) {
     (void)env; (void)cls;
     return ((jlong)(uint32_t)WebPGetEncoderVersion()<<32) | (jlong)(uint32_t)WebPGetDecoderVersion();

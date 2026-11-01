@@ -73,10 +73,10 @@ static const struct JNINativeInterface_ functions = {
     .ReleaseByteArrayElements=unpin, .NewByteArray=new_array, .SetByteArrayRegion=set_region,
     .NewIntArray=new_int_array, .SetIntArrayRegion=set_int_region, .GetIntArrayRegion=get_int_region
 };
-#define ENCODE(a,w,h,q,l) Java_io_github_shinyook_webpbridge_WebP_00024Native_encode(&env,NULL,(jintArray)(a),w,h,JNI_FALSE,q,l)
-#define INSPECT(a) Java_io_github_shinyook_webpbridge_WebP_00024Native_inspect(&env,NULL,a)
+#define ENCODE(a,w,h,q,l) Java_io_github_prismpx_webpbridge_WebP_00024Native_encode(&env,NULL,(jintArray)(a),w,h,JNI_FALSE,q,l)
+#define INSPECT(a) Java_io_github_prismpx_webpbridge_WebP_00024Native_inspect(&env,NULL,a)
 static Array *decode_info;
-#define DECODE(a,limit) ((jbyteArray)Java_io_github_shinyook_webpbridge_WebP_00024Native_decode(&env,NULL,a,limit,(jintArray)decode_info))
+#define DECODE(a,limit) ((jbyteArray)Java_io_github_prismpx_webpbridge_WebP_00024Native_decode(&env,NULL,a,limit,(jintArray)decode_info))
 #define REJECT(expr) do { pending_exception=0; jbyteArray rejected=(expr); assert(!rejected && pending_exception && pins==0); pending_exception=0; } while(0)
 int main(void) {
     JNIEnv env=&functions;
@@ -147,10 +147,10 @@ int main(void) {
     REJECT(ENCODE((jbyteArray)source,64,63,80,0));
     REJECT(DECODE(NULL,4096));
     Array *short_info=int_array(2);
-    REJECT((jbyteArray)Java_io_github_shinyook_webpbridge_WebP_00024Native_decode(&env,NULL,(jbyteArray)source,4096,(jintArray)short_info));
+    REJECT((jbyteArray)Java_io_github_prismpx_webpbridge_WebP_00024Native_decode(&env,NULL,(jbyteArray)source,4096,(jintArray)short_info));
     dispose((jbyteArray)short_info);
     /* Opaque flag forces alpha to 0xff; lossless round trip must then be fully opaque. */
-    jbyteArray opaque=Java_io_github_shinyook_webpbridge_WebP_00024Native_encode(&env,NULL,(jintArray)source,64,64,JNI_TRUE,80,1);
+    jbyteArray opaque=Java_io_github_prismpx_webpbridge_WebP_00024Native_encode(&env,NULL,(jintArray)source,64,64,JNI_TRUE,80,1);
     assert(opaque && !pending_exception);
     jbyteArray restored=DECODE(opaque,4096);
     assert(restored && ints(decode_info)[2]==0);

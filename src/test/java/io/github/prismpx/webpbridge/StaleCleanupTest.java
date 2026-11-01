@@ -1,4 +1,4 @@
-package io.github.shinyook.webpbridge;
+package io.github.prismpx.webpbridge;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

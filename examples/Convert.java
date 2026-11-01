@@ -1,4 +1,4 @@
-import io.github.shinyook.webpbridge.WebP;
+import io.github.prismpx.webpbridge.WebP;
 import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;

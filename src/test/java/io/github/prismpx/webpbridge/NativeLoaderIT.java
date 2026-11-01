@@ -1,4 +1,4 @@
-package io.github.shinyook.webpbridge;
+package io.github.prismpx.webpbridge;
 
 import java.nio.file.*;
 import java.util.*;
@@ -15,7 +15,7 @@ class NativeLoaderIT {
     private Path source() throws Exception {
         Path source=temp.resolve("Probe.java");
         Files.writeString(source,"""
-            import io.github.shinyook.webpbridge.WebP;
+            import io.github.prismpx.webpbridge.WebP;
             import java.awt.image.BufferedImage;
             class Probe {
                 public static void main(String[] args) {

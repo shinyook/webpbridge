@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion><groupId>io.github.shinyook</groupId><artifactId>webpbridge</artifactId><version>0.1.0-SNAPSHOT</version>
-  <name>webpbridge</name><description>Small Java JNI binding for libwebp</description><url>https://github.com/shinyook/webpbridge</url>
+  <modelVersion>4.0.0</modelVersion><groupId>io.github.prismpx</groupId><artifactId>webpbridge</artifactId><version>0.1.0-SNAPSHOT</version>
+  <name>webpbridge</name><description>Small Java JNI binding for libwebp</description><url>https://github.com/prismpx/webpbridge</url>
   <licenses><license><name>MIT License</name><url>https://opensource.org/license/mit</url></license></licenses>
   <developers><developer><id>shinyook</id><name>Shinyook Lee</name><url>https://github.com/shinyook</url></developer></developers>
-  <scm><connection>scm:git:https://github.com/shinyook/webpbridge.git</connection><developerConnection>scm:git:ssh://git@github.com/shinyook/webpbridge.git</developerConnection><url>https://github.com/shinyook/webpbridge</url><tag>HEAD</tag></scm>
+  <scm><connection>scm:git:https://github.com/prismpx/webpbridge.git</connection><developerConnection>scm:git:ssh://git@github.com/prismpx/webpbridge.git</developerConnection><url>https://github.com/prismpx/webpbridge</url><tag>HEAD</tag></scm>
   <properties><webpbridge.test.jar>${project.build.directory}/${project.build.finalName}.jar</webpbridge.test.jar><maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><test.groups></test.groups><test.excludedGroups>stress,interop</test.excludedGroups><test.jvmArgs>-Xcheck:jni</test.jvmArgs></properties>
   <dependencies><dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><version>5.12.2</version><scope>test</scope></dependency></dependencies>
   <build>

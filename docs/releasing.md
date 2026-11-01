@@ -2,7 +2,7 @@
 
 ## Coordinates and scope
 
-Planned initial release: `io.github.shinyook:webpbridge:0.1.0`. The development POM stays at `0.1.0-SNAPSHOT`; the release workflow changes the version in its isolated checkout. Maven Central publication has not happened yet.
+Planned initial release: `io.github.prismpx:webpbridge:0.1.0`. The development POM stays at `0.1.0-SNAPSHOT`; the release workflow changes the version in its isolated checkout. Maven Central publication has not happened yet.
 
 The release JAR bundles exactly these three platform libraries. Windows builds statically link the MSVC runtime; other operating-system library requirements still apply:
 
@@ -16,10 +16,10 @@ Linux ARM64 and Intel macOS are not bundled in the initial release. Each native 
 
 ## Maven Central setup (maintainer)
 
-1. Sign in at [Central Portal](https://central.sonatype.com) and verify `io.github.shinyook`. [Namespace registration](https://central.sonatype.org/register/namespace/) explains GitHub-based namespaces. `io.shinyook` would require ownership verification for `shinyook.io`.
+1. Sign in at [Central Portal](https://central.sonatype.com) and register and verify `io.github.prismpx`. [Namespace registration](https://central.sonatype.org/register/namespace/) explains GitHub-based namespaces; for an organization namespace, the portal asks for a public repository named after its verification key inside the `prismpx` organization.
 2. Generate a [Central Portal user token](https://central.sonatype.org/publish/generate-portal-token/). This is separate from a GitHub token or account password.
 3. Create or select a dedicated OpenPGP signing key and publish its public key using a [supported public key server](https://central.sonatype.org/publish/requirements/gpg/). Keep the private key and a backup under maintainer control; never commit it or paste it into an issue/chat.
-4. Register these [repository Actions secrets](https://github.com/shinyook/webpbridge/settings/secrets/actions):
+4. Register these [repository Actions secrets](https://github.com/prismpx/webpbridge/settings/secrets/actions):
 
 | Secret | Value |
 | --- | --- |
@@ -45,7 +45,7 @@ Once candidate validation passes and credentials are configured, create and push
 
 Publishing is rejected if the tag does not match the stable version. The workflow repeats candidate verification, rebuilds with the same commit timestamp for reproducible JARs, and compares the main, source and Javadoc JARs and POM with the verified candidate before signing and deploying. The dedicated publishing job receives secrets only when `publish=true`. The [official Central publishing plugin](https://central.sonatype.org/publish/publish-portal-maven/) creates checksums, uploads, and waits for publication. A version already published to Central cannot be overwritten; use a new version for corrections.
 
-Signing and authenticated Portal validation cannot be confirmed by an unsigned candidate run. A successful candidate does not mean the release is on Maven Central. After publication, verify retrieval of `io.github.shinyook:webpbridge:0.1.0` using a fresh local Maven repository and run the packaged-JAR checks against that downloaded artifact before announcing availability.
+Signing and authenticated Portal validation cannot be confirmed by an unsigned candidate run. A successful candidate does not mean the release is on Maven Central. After publication, verify retrieval of `io.github.prismpx:webpbridge:0.1.0` using a fresh local Maven repository and run the packaged-JAR checks against that downloaded artifact before announcing availability.
 
 ## Local packaging
 
@@ -55,6 +55,6 @@ See [Central publication requirements](https://central.sonatype.org/publish/requ
 
 ## Initial candidate validation record (2026-11-01)
 
-[Candidate run 41302802236](https://github.com/shinyook/webpbridge/actions/runs/41302802236) passed native builds, complete-bundle assembly, source/Javadoc generation, and fresh-JVM tests of the same multi-platform JAR on all six OS/JDK combinations. All 11 non-publishing jobs passed; the publishing job was intentionally skipped (`publish=false`). The downloaded candidate's SHA-256 manifest and exact three-native resource set were independently checked. The main JAR is 900,193 bytes. This is an unsigned candidate, not a Maven Central release.
+[Candidate run 41302802236](https://github.com/prismpx/webpbridge/actions/runs/41302802236) passed native builds, complete-bundle assembly, source/Javadoc generation, and fresh-JVM tests of the same multi-platform JAR on all six OS/JDK combinations. All 11 non-publishing jobs passed; the publishing job was intentionally skipped (`publish=false`). The downloaded candidate's SHA-256 manifest and exact three-native resource set were independently checked. The main JAR is 900,193 bytes. This is an unsigned candidate, not a Maven Central release.
 
 Local validation also passed seven assembler tests (including Windows CRLF notice normalization, missing/duplicate platforms, conflicting notice text and unexpected payload rejection). The Maven signing profile was exercised with a temporary, passphrase-protected test key; main/source/Javadoc JAR signatures and the POM signature independently verified. That test key was deleted and is not a release signing identity. Authenticated Central validation and publication still require the maintainer's verified namespace, Portal token and published signing public key.

@@ -1,4 +1,4 @@
-package io.github.shinyook.webpbridge;
+package io.github.prismpx.webpbridge;
 
 /** Immutable per-call configuration. Limits are independent, not a total memory budget. */
 public final class WebPOptions {

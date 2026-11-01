@@ -72,7 +72,7 @@ Diagnostics do not retry or repair a failed load (that needs a new class loader 
 
 ### CI evidence for #6–#9
 
-[Build and test run 41315518098](https://github.com/shinyook/webpbridge/actions/runs/41315518098) and [release-candidate run 41315557101](https://github.com/shinyook/webpbridge/actions/runs/41315557101) validate commit `7f7924a`. Every job passed; publishing was skipped by design.
+[Build and test run 41315518098](https://github.com/prismpx/webpbridge/actions/runs/41315518098) and [release-candidate run 41315557101](https://github.com/prismpx/webpbridge/actions/runs/41315557101) validate commit `7f7924a`. Every job passed; publishing was skipped by design.
 
 | Hosted runtime | Java | Unit checks | Packaged-JAR checks |
 | --- | --- | --- | --- |
@@ -124,7 +124,7 @@ Cleanup only runs when a later process loads the bundled library. A host that ne
 
 ### CI evidence for #10–#13
 
-[Build and test run 41319840094](https://github.com/shinyook/webpbridge/actions/runs/41319840094) validates the code now at commit `3afb3d2`. All jobs passed. (These runs executed before an authorship-only history rewrite on 2026-11-01, when the identical trees were commits `ff996c8`, `32e33d7` and `dfbb03e`.)
+[Build and test run 41319840094](https://github.com/prismpx/webpbridge/actions/runs/41319840094) validates the code now at commit `3afb3d2`. All jobs passed. (These runs executed before an authorship-only history rewrite on 2026-11-01, when the identical trees were commits `ff996c8`, `32e33d7` and `dfbb03e`.)
 
 | Hosted runtime | Java | Unit checks | Packaged-JAR checks |
 | --- | --- | --- | --- |
@@ -132,11 +132,11 @@ Cleanup only runs when a later process loads the bundled library. A host that ne
 | Windows amd64 | 17 / 25 | 59 each | 6 each |
 | macOS aarch64 | 17 / 25 | 59 each | 6 each |
 
-The stress job (large images, the 2,000-cycle JVM soak and cwebp/dwebp interoperability) and the native-memory job under ASan/UBSan/LeakSanitizer also passed. Intermediate commits `173dd0f` (#10, #11) and `3e966ac` (#12) also passed their own runs. [Release-candidate run 41320045896](https://github.com/shinyook/webpbridge/actions/runs/41320045896) on `3afb3d2` built all three native libraries, assembled the multi-platform JAR and verified it with fresh JVMs on all three operating systems with JDK 17 and 25 (publishing skipped).
+The stress job (large images, the 2,000-cycle JVM soak and cwebp/dwebp interoperability) and the native-memory job under ASan/UBSan/LeakSanitizer also passed. Intermediate commits `173dd0f` (#10, #11) and `3e966ac` (#12) also passed their own runs. [Release-candidate run 41320045896](https://github.com/prismpx/webpbridge/actions/runs/41320045896) on `3afb3d2` built all three native libraries, assembled the multi-platform JAR and verified it with fresh JVMs on all three operating systems with JDK 17 and 25 (publishing skipped).
 
 ## Final CI evidence for #1–#5
 
-[Run 41300435343](https://github.com/shinyook/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
+[Run 41300435343](https://github.com/prismpx/webpbridge/actions/runs/41300435343) validates code commit `e63637d9d38b44b05f5fa543d249f414e7f8626d`. All eight jobs passed:
 
 | Hosted runtime | Java | Unit checks | Packaged-JAR checks |
 | --- | --- | --- | --- |

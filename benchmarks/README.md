@@ -17,7 +17,7 @@ First build and install this project **for the machine running JMH**, following 
 ```sh
 mvn install
 mvn -f benchmarks/pom.xml package
-java -cp benchmarks/target/benchmarks.jar io.github.shinyook.webpbridge.benchmarks.CodecBenchmark
+java -cp benchmarks/target/benchmarks.jar io.github.prismpx.webpbridge.benchmarks.CodecBenchmark
 java -jar benchmarks/target/benchmarks.jar CodecBenchmark -foe true \
   -prof gc -rf json -rff benchmarks/results/local.json
 ```
