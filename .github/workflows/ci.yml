@@ -25,3 +25,22 @@ jobs:
         with:
           name: webp-jni-${{ matrix.os }}-java${{ matrix.java }}
           path: target/webp-jni-*.jar
+  stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --config Release --parallel 3
+      - run: cmake --install build --config Release --prefix target/classes --component webpjni
+      - run: mvn --batch-mode -Pstress test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stress-reports
+          path: target/surefire-reports/

@@ -60,3 +60,7 @@ The loader selects `/native/<os>-<arch>/<library>` from the JAR, extracts it int
 ## License
 
 Java/JNI wrapper: MIT. Bundled libwebp: upstream BSD-style license and patent grant, copied into `META-INF/licenses/libwebp` during the native install step. See [libwebp](https://github.com/webmproject/libwebp).
+
+## Extended validation
+
+After the native install step, `mvn -Pstress test` runs 4096×4096 lossy/lossless round trips and two concurrent 2048×2048 lossless round trips with JNI checks and a 2 GiB Java heap limit. It checks every lossless pixel and every lossy alpha value, default decode-limit rejection above 16 million pixels, and successful decoding with an explicit larger limit. Test timeouts are failure detection, not interruption of an in-flight native codec. Run this suite in a process with an external time limit on CI. Measurements are workload-specific, not a throughput or peak-memory guarantee.
